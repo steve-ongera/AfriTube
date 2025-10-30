@@ -227,7 +227,7 @@ class VideoAdmin(admin.ModelAdmin):
     inlines = [VideoQualityInline]
     
     def creator_link(self, obj):
-        url = reverse('admin:app_user_change', args=[obj.creator.id])
+        url = reverse('admin:streamin_application_user_change', args=[obj.creator.id])
         return format_html('<a href="{}">{}</a>', url, obj.creator.username)
     creator_link.short_description = 'Creator'
     

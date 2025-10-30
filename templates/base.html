@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AfriTube - Watch, Share & Earn{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --sidebar-width: 240px;
+            --sidebar-collapsed-width: 72px;
+            --navbar-height: 56px;
+            --primary-color: #ff4400;
+            --hover-bg: #f2f2f2;
+            --text-primary: #0f0f0f;
+            --text-secondary: #606060;
+            --border-color: #e5e5e5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Roboto", Arial, sans-serif;
+            overflow-x: hidden;
+            background-color: #f9f9f9;
+        }
+
+        /* Navbar */
+        .navbar-custom {
+            height: var(--navbar-height);
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            padding: 0 16px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .navbar-search {
+            max-width: 600px;
+            flex: 1;
+        }
+
+        .search-form {
+            display: flex;
+            height: 40px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 20px 0 0 20px;
+            padding: 0 16px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1c62b9;
+        }
+
+        .search-btn {
+            width: 64px;
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            border-left: none;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-icon-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-icon-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #cc0000;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--navbar-height));
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            background: #fff;
+            overflow-y: auto;
+            transition: width 0.3s, transform 0.3s;
+            z-index: 1020;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .sidebar-item.active {
+            background: #f2f2f2;
+            font-weight: 500;
+        }
+
+        .sidebar-item i {
+            font-size: 22px;
+            width: 24px;
+            margin-right: 24px;
+        }
+
+        .sidebar.collapsed .sidebar-item span {
+            display: none;
+        }
+
+        .sidebar-section {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section-title {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .sidebar.collapsed .sidebar-section-title {
+            display: none;
+        }
+
+        .subscription-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .subscription-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .subscription-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 24px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--navbar-height);
+            padding: 24px;
+            min-height: calc(100vh - var(--navbar-height));
+            transition: margin-left 0.3s;
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Category Pills */
+        .category-pills {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+        }
+
+        .category-pills::-webkit-scrollbar {
+            height: 0;
+        }
+
+        .category-pill {
+            padding: 8px 12px;
+            background: #f2f2f2;
+            border: none;
+            border-radius: 8px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .category-pill:hover {
+            background: #e5e5e5;
+        }
+
+        .category-pill.active {
+            background: var(--text-primary);
+            color: white;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .navbar-search {
+                display: none;
+            }
+
+            .mobile-search-btn {
+                display: block !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-search-btn {
+                display: none !important;
+            }
+
+            .menu-toggle-mobile {
+                display: none !important;
+            }
+        }
+
+        /* Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #909090;
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #606060;
+        }
+
+        /* Create Button */
+        .create-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .create-btn:hover {
+            background: #f8f8f8;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar-custom d-flex align-items-center justify-content-between">
+        <!-- Left Section -->
+        <div class="d-flex align-items-center gap-2">
+            <button class="nav-icon-btn menu-toggle-desktop" id="menuToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <button class="nav-icon-btn menu-toggle-mobile d-md-none" id="menuToggleMobile">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <a href="/" class="navbar-brand">
+                <div class="logo-icon">
+                    <i class="bi bi-play-circle-fill"></i>
+                </div>
+                <span>AfriTube</span>
+            </a>
+        </div>
+
+        <!-- Search Section (Desktop) -->
+        <div class="navbar-search d-none d-md-flex">
+            <form class="search-form w-100">
+                <input type="text" class="search-input" placeholder="Search" name="q">
+                <button type="submit" class="search-btn">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Right Section -->
+        <div class="navbar-actions">
+            <button class="nav-icon-btn mobile-search-btn">
+                <i class="bi bi-search"></i>
+            </button>
+            
+            <button class="create-btn d-none d-md-flex">
+                <i class="bi bi-plus-lg"></i>
+                <span>Create</span>
+            </button>
+
+            <button class="nav-icon-btn d-md-none">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+
+            <button class="nav-icon-btn">
+                <i class="bi bi-bell"></i>
+                <span class="notification-badge">9+</span>
+            </button>
+
+            <button class="nav-icon-btn">
+                <img src="https://ui-avatars.com/api/?name=User&background=ff4400&color=fff" alt="User" class="user-avatar">
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Main Navigation -->
+        <div class="sidebar-section">
+            <a href="/" class="sidebar-item active">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Home</span>
+            </a>
+            <a href="/shorts" class="sidebar-item">
+                <i class="bi bi-play-btn"></i>
+                <span>Shorts</span>
+            </a>
+            <a href="/subscriptions" class="sidebar-item">
+                <i class="bi bi-collection-play"></i>
+                <span>Subscriptions</span>
+            </a>
+        </div>
+
+        <!-- You Section -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">You</div>
+            <a href="/history" class="sidebar-item">
+                <i class="bi bi-clock-history"></i>
+                <span>History</span>
+            </a>
+            <a href="/playlists" class="sidebar-item">
+                <i class="bi bi-collection"></i>
+                <span>Playlists</span>
+            </a>
+            <a href="/your-videos" class="sidebar-item">
+                <i class="bi bi-play-circle"></i>
+                <span>Your videos</span>
+            </a>
+            <a href="/watch-later" class="sidebar-item">
+                <i class="bi bi-clock"></i>
+                <span>Watch later</span>
+            </a>
+            <a href="/liked-videos" class="sidebar-item">
+                <i class="bi bi-hand-thumbs-up"></i>
+                <span>Liked videos</span>
+            </a>
+        </div>
+
+        <!-- Subscriptions -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Subscriptions</div>
+            <a href="#" class="subscription-item">
+                <img src="https://ui-avatars.com/api/?name=Creator+1&background=ff4400&color=fff" class="subscription-avatar">
+                <span>Creator Name 1</span>
+            </a>
+            <a href="#" class="subscription-item">
+                <img src="https://ui-avatars.com/api/?name=Creator+2&background=3498db&color=fff" class="subscription-avatar">
+                <span>Creator Name 2</span>
+            </a>
+            <a href="#" class="subscription-item">
+                <img src="https://ui-avatars.com/api/?name=Creator+3&background=2ecc71&color=fff" class="subscription-avatar">
+                <span>Creator Name 3</span>
+            </a>
+            <a href="#" class="subscription-item">
+                <i class="bi bi-chevron-down"></i>
+                <span>Show more</span>
+            </a>
+        </div>
+
+        <!-- Explore -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Explore</div>
+            <a href="/trending" class="sidebar-item">
+                <i class="bi bi-fire"></i>
+                <span>Trending</span>
+            </a>
+            <a href="/music" class="sidebar-item">
+                <i class="bi bi-music-note-beamed"></i>
+                <span>Music</span>
+            </a>
+            <a href="/gaming" class="sidebar-item">
+                <i class="bi bi-controller"></i>
+                <span>Gaming</span>
+            </a>
+            <a href="/news" class="sidebar-item">
+                <i class="bi bi-newspaper"></i>
+                <span>News</span>
+            </a>
+            <a href="/sports" class="sidebar-item">
+                <i class="bi bi-trophy"></i>
+                <span>Sports</span>
+            </a>
+            <a href="/live" class="sidebar-item">
+                <i class="bi bi-broadcast"></i>
+                <span>Live</span>
+            </a>
+        </div>
+
+        <!-- Settings -->
+        <div class="sidebar-section">
+            <a href="/settings" class="sidebar-item">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+            <a href="/help" class="sidebar-item">
+                <i class="bi bi-question-circle"></i>
+                <span>Help</span>
+            </a>
+            <a href="/feedback" class="sidebar-item">
+                <i class="bi bi-chat-left-text"></i>
+                <span>Send feedback</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Category Pills -->
+        <div class="category-pills">
+            <button class="category-pill active">All</button>
+            <button class="category-pill">Music</button>
+            <button class="category-pill">Comedy</button>
+            <button class="category-pill">Gaming</button>
+            <button class="category-pill">Live</button>
+            <button class="category-pill">News</button>
+            <button class="category-pill">Sports</button>
+            <button class="category-pill">Education</button>
+            <button class="category-pill">Entertainment</button>
+            <button class="category-pill">Cooking</button>
+            <button class="category-pill">Travel</button>
+        </div>
+
+        <!-- Page Content -->
+        {% block content %}
+        <!-- Your page content goes here -->
+        {% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const menuToggleMobile = document.getElementById('menuToggleMobile');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        // Desktop toggle (collapse/expand)
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // Mobile toggle (show/hide)
+        menuToggleMobile.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !menuToggleMobile.contains(e.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+
+        // Active sidebar item
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', function() {
+                sidebarItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

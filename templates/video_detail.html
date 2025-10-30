@@ -1,0 +1,1499 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ video.title }} - AfriTube{% endblock %}
+
+{% block content %}
+<div class="video-page">
+    <div class="video-layout">
+        <!-- Main Content -->
+        <div class="video-main">
+            <!-- Video Player -->
+            <div class="player-container">
+                {% if has_access %}
+                <video 
+                    id="videoPlayer"
+                    controls
+                    class="video-player"
+                    poster="{{ video.thumbnail.url }}"
+                    data-video-id="{{ video.video_id }}"
+                >
+                    <source src="{{ video.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                {% else %}
+                <div class="player-restricted">
+                    <div class="restricted-content">
+                        {% if video.video_type == 'premium' %}
+                        <svg class="restricted-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <h3>Premium Content</h3>
+                        <p>Subscribe or purchase to watch this video</p>
+                        {% if request.user.is_authenticated %}
+                        <div class="restricted-actions">
+                            <a href="{% url 'purchase_video' video.video_id %}" class="btn-purchase">
+                                Purchase • ${{ video.price }}
+                            </a>
+                            <button class="btn-subscribe">Subscribe</button>
+                        </div>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-signin">
+                            Sign in to purchase
+                        </a>
+                        {% endif %}
+                        
+                        {% elif video.video_type == 'pay_per_view' %}
+                        <svg class="restricted-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                        </svg>
+                        <h3>Pay Per View</h3>
+                        <p>Purchase this video to watch</p>
+                        {% if request.user.is_authenticated %}
+                        <a href="{% url 'purchase_video' video.video_id %}" class="btn-purchase">
+                            Purchase • ${{ video.price }}
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-signin">
+                            Sign in to purchase
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Video Info -->
+            <div class="video-info">
+                <h1 class="video-title">{{ video.title }}</h1>
+                
+                <div class="video-metadata">
+                    <div class="video-stats">
+                        <span>{{ view_count|default:"0" }} views</span>
+                        <span class="separator">•</span>
+                        <span>{{ video.published_at|date:"M d, Y" }}</span>
+                    </div>
+                    
+                    <div class="video-actions">
+                        <div class="action-group">
+                            <button class="action-button {% if user_like and user_like.is_like %}active{% endif %}" data-action="like">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                                </svg>
+                                <span class="like-count">{{ video.like_count|default:"0" }}</span>
+                            </button>
+                            <div class="button-divider"></div>
+                            <button class="action-button {% if user_like and not user_like.is_like %}active{% endif %}" data-action="dislike">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <button class="action-button share-btn" data-bs-toggle="modal" data-bs-target="#shareModal">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15 5.63L20.66 12 15 18.37V15v-1h-1c-3.96 0-7.14 1-9.75 3.09 1.84-4.07 5.11-6.4 9.89-7.1L15 9.86V9V5.63M14 3v6C6.22 10.13 3.11 15.33 2 21c2.78-3.97 6.44-6 12-6v6l8-9-8-9z"/>
+                            </svg>
+                            <span>Share</span>
+                        </button>
+
+                        {% if video.allow_downloads and has_access %}
+                        <a href="{% url 'download_video' video.video_id %}" class="action-button">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/>
+                            </svg>
+                            <span>Download</span>
+                        </a>
+                        {% endif %}
+
+                        {% if request.user.is_authenticated %}
+                        <button class="action-button save-btn {% if in_watch_later %}active{% endif %}" data-action="{% if in_watch_later %}remove{% else %}add{% endif %}">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                            </svg>
+                            <span>Save</span>
+                        </button>
+                        {% endif %}
+
+                        <button class="action-button more-btn">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channel Info -->
+            <div class="channel-section">
+                <div class="channel-info">
+                    <img src="{{ video.creator.get_profile_picture_url }}" 
+                         alt="{{ video.creator.username }}" 
+                         class="channel-avatar">
+                    <div class="channel-details">
+                        <a href="{% url 'channel' video.creator.username %}" class="channel-name">
+                            {{ video.creator.channel_name|default:video.creator.username }}
+                            {% if video.creator.is_verified %}
+                            <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M9.8,17.3l-4.2-4.1L7,11.8l2.8,2.7L17,7.4l1.4,1.4 L9.8,17.3z"/>
+                            </svg>
+                            {% endif %}
+                        </a>
+                        <p class="channel-subs">{{ video.creator.total_followers|default:"0" }} subscribers</p>
+                    </div>
+                </div>
+                {% if request.user.is_authenticated and request.user != video.creator %}
+                <button class="subscribe-button">Subscribe</button>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="description-section">
+                <div class="description-preview">
+                    <p class="description-text">{{ video.description|linebreaks|urlize|truncatechars:200 }}</p>
+                    <button class="show-more-btn">Show more</button>
+                </div>
+                <div class="description-full d-none">
+                    <div class="description-metadata">
+                        {% if video.category %}
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <a href="#" class="meta-link">{{ video.category.name }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <p class="description-text">{{ video.description|linebreaks|urlize }}</p>
+                    {% if video.tags.exists %}
+                    <div class="video-tags">
+                        {% for tag in video.tags.all %}
+                        <a href="{% url 'search' %}?q={{ tag.name }}" class="tag-chip">#{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <button class="show-less-btn">Show less</button>
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="comments-section">
+                <div class="comments-header">
+                    <h2 class="comments-count">{{ video.comment_count|default:"0" }} Comments</h2>
+                    <div class="sort-dropdown">
+                        <button class="sort-button">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                            </svg>
+                            Sort by
+                        </button>
+                    </div>
+                </div>
+
+                {% if request.user.is_authenticated %}
+                <div class="comment-composer">
+                    <img src="{{ request.user.get_profile_picture_url }}" 
+                         alt="{{ request.user.username }}" 
+                         class="composer-avatar">
+                    <div class="composer-input-wrapper">
+                        <input type="text" 
+                               class="composer-input" 
+                               placeholder="Add a comment..."
+                               id="commentInput">
+                        <div class="composer-actions d-none">
+                            <button class="composer-cancel">Cancel</button>
+                            <button class="composer-submit" disabled>Comment</button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="comment-signin">
+                    <p>
+                        <a href="{% url 'login' %}?next={{ request.path }}">Sign in</a> 
+                        to comment
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="comment" data-comment-id="{{ comment.id }}">
+                        <img src="{{ comment.user.get_profile_picture_url }}" 
+                             alt="{{ comment.user.username }}" 
+                             class="comment-avatar">
+                        <div class="comment-body">
+                            <div class="comment-header">
+                                <span class="comment-author">{{ comment.user.username }}</span>
+                                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                            </div>
+                            <p class="comment-content">{{ comment.content }}</p>
+                            <div class="comment-toolbar">
+                                <button class="toolbar-btn like-btn">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                                    </svg>
+                                    <span>{{ comment.like_count|default:"0" }}</span>
+                                </button>
+                                <button class="toolbar-btn dislike-btn">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn reply-btn">Reply</button>
+                            </div>
+
+                            {% if comment.replies.all %}
+                            <div class="replies">
+                                {% for reply in comment.replies.all %}
+                                <div class="comment reply" data-comment-id="{{ reply.id }}">
+                                    <img src="{{ reply.user.get_profile_picture_url }}" 
+                                         alt="{{ reply.user.username }}" 
+                                         class="comment-avatar">
+                                    <div class="comment-body">
+                                        <div class="comment-header">
+                                            <span class="comment-author">{{ reply.user.username }}</span>
+                                            <span class="comment-time">{{ reply.created_at|timesince }} ago</span>
+                                        </div>
+                                        <p class="comment-content">{{ reply.content }}</p>
+                                        <div class="comment-toolbar">
+                                            <button class="toolbar-btn like-btn">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                                                </svg>
+                                                <span>{{ reply.like_count|default:"0" }}</span>
+                                            </button>
+                                            <button class="toolbar-btn dislike-btn">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+                                                </svg>
+                                            </button>
+                                            <button class="toolbar-btn reply-btn">Reply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-comments">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                        </svg>
+                        <p>No comments yet</p>
+                        <span>Be the first to comment!</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="video-sidebar">
+            <h3 class="sidebar-title">Related</h3>
+            <div class="related-videos">
+                {% for related in related_videos %}
+                <a href="{% url 'video_detail' related.video_id %}" class="related-item">
+                    <div class="related-thumbnail">
+                        <img src="{{ related.thumbnail.url }}" alt="{{ related.title }}">
+                        <span class="related-duration">{{ related.duration|date:"i:s" }}</span>
+                        {% if related.video_type == 'premium' %}
+                        <span class="premium-badge">Premium</span>
+                        {% endif %}
+                    </div>
+                    <div class="related-info">
+                        <h4 class="related-title">{{ related.title|truncatechars:60 }}</h4>
+                        <p class="related-channel">{{ related.creator.channel_name|default:related.creator.username }}</p>
+                        <p class="related-meta">
+                            {{ related.view_count|default:"0" }} views • {{ related.published_at|timesince }} ago
+                        </p>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="no-related">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
+                    </svg>
+                    <p>No related videos</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="share-platforms">
+                    <button class="platform-btn facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span>Facebook</span>
+                    </button>
+                    <button class="platform-btn twitter">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                        <span>Twitter</span>
+                    </button>
+                    <button class="platform-btn whatsapp">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        <span>WhatsApp</span>
+                    </button>
+                </div>
+                <div class="share-link-group">
+                    <input type="text" class="share-link-input" value="{{ request.build_absolute_uri }}" readonly>
+                    <button class="copy-link-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern YouTube Video Page Layout */
+    .video-page {
+        background: #f9f9f9;
+        min-height: 100vh;
+        padding-top: 56px;
+    }
+
+    .video-layout {
+        max-width: 1920px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 402px;
+        gap: 24px;
+        padding: 24px;
+    }
+
+    /* Video Player */
+    .player-container {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        position: relative;
+    }
+
+    .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .player-restricted {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    }
+
+    .restricted-content {
+        text-align: center;
+        padding: 40px;
+        color: #f1f1f1;
+        max-width: 400px;
+    }
+
+    .restricted-icon {
+        width: 80px;
+        height: 80px;
+        color: #ffa500;
+        margin-bottom: 24px;
+    }
+
+    .restricted-content h3 {
+        font-size: 24px;
+        font-weight: 500;
+        margin: 0 0 8px 0;
+    }
+
+    .restricted-content p {
+        font-size: 14px;
+        color: #aaa;
+        margin: 0 0 24px 0;
+    }
+
+    .restricted-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .btn-purchase,
+    .btn-subscribe,
+    .btn-signin {
+        padding: 10px 24px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-purchase {
+        background: #065fd4;
+        color: white;
+    }
+
+    .btn-purchase:hover {
+        background: #0b7be8;
+    }
+
+    .btn-subscribe {
+        background: #cc0000;
+        color: white;
+    }
+
+    .btn-subscribe:hover {
+        background: #a00000;
+    }
+
+    .btn-signin {
+        background: white;
+        color: #030303;
+        display: inline-block;
+    }
+
+    .btn-signin:hover {
+        background: #f2f2f2;
+    }
+
+    /* Video Info */
+    .video-info {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 12px;
+    }
+
+    .video-title {
+        font-size: 20px;
+        font-weight: 500;
+        color: #030303;
+        margin: 0 0 12px 0;
+        line-height: 1.4;
+    }
+
+    .video-metadata {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .video-stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #606060;
+    }
+
+    .separator {
+        color: #aaa;
+    }
+
+    .video-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .action-group {
+        display: flex;
+        background: #f2f2f2;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .action-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: transparent;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #030303;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+    }
+
+    .action-button:hover {
+        background: #e5e5e5;
+    }
+
+    .action-button.active {
+        color: #065fd4;
+    }
+
+    .action-group .action-button {
+        border-radius: 0;
+    }
+
+    .action-group .action-button:hover {
+        background: #e5e5e5;
+    }
+
+    .button-divider {
+        width: 1px;
+        background: #ccc;
+    }
+
+    .action-button svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Channel Section */
+    .channel-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: white;
+        border-radius: 12px;
+        margin-top: 12px;
+    }
+
+    .channel-info {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .channel-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .channel-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: #030303;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0 0 2px 0;
+    }
+
+    .verified-icon {
+        width: 14px;
+        height: 14px;
+        color: #606060;
+    }
+
+    .channel-subs {
+        font-size: 12px;
+        color: #606060;
+        margin: 0;
+    }
+
+    .subscribe-button {
+        padding: 10px 24px;
+        background: #cc0000;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .subscribe-button:hover {
+        background: #a00000;
+    }
+
+    .subscribe-button.subscribed {
+        background: #606060;
+    }
+
+    /* Description */
+    .description-section {
+        background: #f2f2f2;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-top: 12px;
+    }
+
+    .description-text {
+        font-size: 14px;
+        color: #030303;
+        line-height: 1.6;
+        margin: 0 0 8px 0;
+        white-space: pre-line;
+    }
+
+    .show-more-btn,
+    .show-less-btn {
+        background: none;
+        border: none;
+        color: #606060;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        margin-top: 8px;
+    }
+
+    .show-more-btn:hover,
+    .show-less-btn:hover {
+        color: #030303;
+    }
+
+    .description-metadata {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .meta-item {
+        margin-bottom: 8px;
+    }
+
+    .meta-label {
+        font-size: 13px;
+        color: #606060;
+        font-weight: 500;
+    }
+
+    .meta-link {
+        font-size: 14px;
+        color: #065fd4;
+        text-decoration: none;
+        margin-left: 8px;
+    }
+
+    .meta-link:hover {
+        text-decoration: underline;
+    }
+
+    .video-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .tag-chip {
+        padding: 4px 12px;
+        background: #e5e5e5;
+        color: #065fd4;
+        border-radius: 12px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .tag-chip:hover {
+        background: #d0d0d0;
+    }
+
+    /* Comments */
+    .comments-section {
+        margin-top: 24px;
+    }
+
+    .comments-header {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+
+    .comments-count {
+        font-size: 20px;
+        font-weight: 500;
+        color: #030303;
+        margin: 0;
+    }
+
+    .sort-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        color: #606060;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 20px;
+        transition: background-color 0.2s;
+    }
+
+    .sort-button:hover {
+        background: #f2f2f2;
+    }
+
+    .sort-button svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Comment Composer */
+    .comment-composer {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .composer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .composer-input-wrapper {
+        flex: 1;
+    }
+
+    .composer-input {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 8px 0;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .composer-input:focus {
+        border-bottom-color: #030303;
+    }
+
+    .composer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .composer-cancel,
+    .composer-submit {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .composer-cancel {
+        background: transparent;
+        color: #606060;
+    }
+
+    .composer-cancel:hover {
+        background: #f2f2f2;
+    }
+
+    .composer-submit {
+        background: #065fd4;
+        color: white;
+    }
+
+    .composer-submit:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .composer-submit:not(:disabled):hover {
+        background: #0b7be8;
+    }
+
+    .comment-signin {
+        padding: 24px;
+        background: #f2f2f2;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .comment-signin p {
+        margin: 0;
+        color: #606060;
+        font-size: 14px;
+    }
+
+    .comment-signin a {
+        color: #065fd4;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .comment-signin a:hover {
+        text-decoration: underline;
+    }
+
+    /* Comments List */
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .comment {
+        display: flex;
+        gap: 16px;
+    }
+
+    .comment.reply {
+        margin-left: 56px;
+    }
+
+    .comment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .comment-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .comment-author {
+        font-size: 13px;
+        font-weight: 500;
+        color: #030303;
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: #606060;
+    }
+
+    .comment-content {
+        font-size: 14px;
+        color: #030303;
+        line-height: 1.5;
+        margin: 0 0 8px 0;
+        white-space: pre-line;
+    }
+
+    .comment-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .toolbar-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: #606060;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 20px;
+        transition: background-color 0.2s;
+    }
+
+    .toolbar-btn:hover {
+        background: #f2f2f2;
+    }
+
+    .toolbar-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .replies {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .no-comments {
+        text-align: center;
+        padding: 60px 20px;
+        color: #909090;
+    }
+
+    .no-comments svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .no-comments p {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0 0 4px 0;
+    }
+
+    .no-comments span {
+        font-size: 14px;
+        color: #aaa;
+    }
+
+    /* Sidebar */
+    .video-sidebar {
+        position: sticky;
+        top: 80px;
+        height: fit-content;
+    }
+
+    .sidebar-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #030303;
+        margin: 0 0 16px 0;
+    }
+
+    .related-videos {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .related-item {
+        display: flex;
+        gap: 8px;
+        text-decoration: none;
+        color: inherit;
+        padding: 8px;
+        border-radius: 12px;
+        transition: background-color 0.2s;
+    }
+
+    .related-item:hover {
+        background: #f2f2f2;
+    }
+
+    .related-thumbnail {
+        position: relative;
+        width: 168px;
+        height: 94px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #e5e5e5;
+    }
+
+    .related-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .related-duration {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .premium-badge {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        background: #ffd700;
+        color: #000;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .related-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .related-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #030303;
+        margin: 0 0 4px 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .related-channel {
+        font-size: 12px;
+        color: #606060;
+        margin: 0 0 2px 0;
+    }
+
+    .related-meta {
+        font-size: 12px;
+        color: #606060;
+        margin: 0;
+    }
+
+    .no-related {
+        text-align: center;
+        padding: 40px 20px;
+        color: #909090;
+    }
+
+    .no-related svg {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+
+    .no-related p {
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Share Modal */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #e5e5e5;
+        padding: 20px;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #030303;
+    }
+
+    .share-platforms {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .platform-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #f2f2f2;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        color: #030303;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .platform-btn:hover {
+        background: #e5e5e5;
+    }
+
+    .platform-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .platform-btn.facebook svg {
+        color: #1877f2;
+    }
+
+    .platform-btn.twitter svg {
+        color: #1da1f2;
+    }
+
+    .platform-btn.whatsapp svg {
+        color: #25d366;
+    }
+
+    .share-link-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .share-link-input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .copy-link-btn {
+        padding: 10px 16px;
+        background: #065fd4;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .copy-link-btn:hover {
+        background: #0b7be8;
+    }
+
+    .copy-link-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .video-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .video-sidebar {
+            position: relative;
+            top: 0;
+        }
+
+        .related-videos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .related-item {
+            flex-direction: column;
+        }
+
+        .related-thumbnail {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .video-page {
+            padding-top: 48px;
+        }
+
+        .video-layout {
+            padding: 12px;
+            gap: 12px;
+        }
+
+        .player-container {
+            border-radius: 0;
+            margin: -12px -12px 12px -12px;
+        }
+
+        .video-info {
+            padding: 16px;
+        }
+
+        .video-title {
+            font-size: 18px;
+        }
+
+        .video-metadata {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .video-actions {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .channel-section {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .subscribe-button {
+            width: 100%;
+        }
+
+        .comments-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .related-videos {
+            grid-template-columns: 1fr;
+        }
+
+        .share-platforms {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .video-actions {
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+
+        .action-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .restricted-content {
+            padding: 20px;
+        }
+
+        .restricted-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .restricted-content h3 {
+            font-size: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Video player analytics
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (videoPlayer) {
+        let watchStartTime = Date.now();
+        let totalWatchTime = 0;
+        
+        videoPlayer.addEventListener('play', function() {
+            watchStartTime = Date.now();
+        });
+        
+        videoPlayer.addEventListener('pause', function() {
+            totalWatchTime += Date.now() - watchStartTime;
+            updateAnalytics();
+        });
+        
+        videoPlayer.addEventListener('ended', function() {
+            totalWatchTime += Date.now() - watchStartTime;
+            updateAnalytics(100);
+        });
+        
+        function updateAnalytics(completion = null) {
+            const videoId = videoPlayer.dataset.videoId;
+            const duration = videoPlayer.duration;
+            const currentTime = videoPlayer.currentTime;
+            
+            let completionPercentage = completion || Math.round((currentTime / duration) * 100);
+            
+            fetch(`/api/video/${videoId}/analytics/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    watch_duration: totalWatchTime,
+                    completion_percentage: completionPercentage,
+                    current_time: currentTime
+                })
+            });
+        }
+    }
+    
+    // Like/Dislike functionality
+    document.querySelectorAll('[data-action="like"], [data-action="dislike"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            fetch(`/video/{{ video.video_id }}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.like-count').textContent = data.like_count;
+                    document.querySelectorAll('[data-action]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // Save/Watch Later
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const action = this.dataset.action;
+            fetch(`/video/{{ video.video_id }}/watch-later/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.classList.toggle('active');
+                    this.dataset.action = data.added ? 'remove' : 'add';
+                }
+            });
+        });
+    }
+    
+    // Subscribe button
+    const subscribeBtn = document.querySelector('.subscribe-button');
+    if (subscribeBtn) {
+        subscribeBtn.addEventListener('click', function() {
+            this.classList.toggle('subscribed');
+            this.textContent = this.classList.contains('subscribed') ? 'Subscribed' : 'Subscribe';
+        });
+    }
+    
+    // Description toggle
+    const showMoreBtn = document.querySelector('.show-more-btn');
+    const showLessBtn = document.querySelector('.show-less-btn');
+    const descPreview = document.querySelector('.description-preview');
+    const descFull = document.querySelector('.description-full');
+    
+    if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+            descPreview.classList.add('d-none');
+            descFull.classList.remove('d-none');
+        });
+    }
+    
+    if (showLessBtn) {
+        showLessBtn.addEventListener('click', () => {
+            descFull.classList.add('d-none');
+            descPreview.classList.remove('d-none');
+        });
+    }
+    
+    // Comment composer
+    const commentInput = document.getElementById('commentInput');
+    const composerActions = document.querySelector('.composer-actions');
+    const composerSubmit = document.querySelector('.composer-submit');
+    const composerCancel = document.querySelector('.composer-cancel');
+    
+    if (commentInput) {
+        commentInput.addEventListener('focus', () => {
+            composerActions.classList.remove('d-none');
+        });
+        
+        commentInput.addEventListener('input', () => {
+            composerSubmit.disabled = commentInput.value.trim().length === 0;
+        });
+        
+        if (composerCancel) {
+            composerCancel.addEventListener('click', () => {
+                commentInput.value = '';
+                composerActions.classList.add('d-none');
+                commentInput.blur();
+            });
+        }
+        
+        if (composerSubmit) {
+            composerSubmit.addEventListener('click', () => {
+                const content = commentInput.value.trim();
+                if (content) {
+                    fetch(`/video/{{ video.video_id }}/comment/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `content=${encodeURIComponent(content)}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    // Copy link
+    const copyBtn = document.querySelector('.copy-link-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const input = document.querySelector('.share-link-input');
+            input.select();
+            document.execCommand('copy');
+            
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>Copied';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

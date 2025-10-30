@@ -1,0 +1,1100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ creator.channel_name|default:creator.username }} - AfriTube{% endblock %}
+
+{% block content %}
+<div class="channel-page">
+    <!-- Channel Header -->
+    <div class="channel-header">
+        <div class="channel-banner">
+            {% if creator.channel_banner %}
+            <img src="{{ creator.channel_banner.url }}" alt="Channel banner" class="banner-img">
+            {% else %}
+            <div class="banner-placeholder"></div>
+            {% endif %}
+        </div>
+        
+        <div class="channel-info">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-2 col-lg-1">
+                        <div class="channel-avatar">
+                            <img src="{{ creator.get_profile_picture_url }}" 
+                                 alt="{{ creator.username }}" 
+                                 class="avatar-img">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-7">
+                        <div class="channel-details">
+                            <h1 class="channel-name">
+                                {{ creator.channel_name|default:creator.username }}
+                                {% if creator.is_verified %}
+                                <i class="bi bi-patch-check-fill verified-badge"></i>
+                                {% endif %}
+                            </h1>
+                            <p class="channel-handle">@{{ creator.username }}</p>
+                            <div class="channel-stats">
+                                <span class="stat-item">
+                                    <strong>{{ total_videos|filesizeformat }}</strong> videos
+                                </span>
+                                <span class="stat-item">
+                                    <strong>{{ total_views|filesizeformat }}</strong> views
+                                </span>
+                                <span class="stat-item">
+                                    <strong>{{ creator.total_followers|filesizeformat }}</strong> followers
+                                </span>
+                            </div>
+                            
+                            {% if creator.bio %}
+                            <p class="channel-bio">{{ creator.bio|truncatewords:30 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 col-lg-4">
+                        <div class="channel-actions">
+                            {% if request.user.is_authenticated and request.user != creator %}
+                            <button class="btn btn-danger follow-btn {% if is_following %}following{% endif %}" 
+                                    data-username="{{ creator.username }}"
+                                    data-following="{{ is_following|yesno:'true,false' }}">
+                                <i class="bi bi-bell{% if is_following %}-fill{% endif %} me-1"></i>
+                                {% if is_following %}Following{% else %}Follow{% endif %}
+                            </button>
+                            {% endif %}
+                            
+                            {% if request.user == creator %}
+                            <a href="{% url 'channel_edit' creator.username %}" class="btn btn-outline-dark">
+                                <i class="bi bi-gear me-1"></i>Customize Channel
+                            </a>
+                            {% else %}
+                            <button class="btn btn-outline-dark share-channel-btn">
+                                <i class="bi bi-share me-1"></i>Share
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Navigation -->
+    <div class="channel-navigation">
+        <div class="container-fluid">
+            <nav class="channel-nav">
+                <a href="?content=videos" class="nav-item {% if content_type == 'videos' %}active{% endif %}">
+                    <i class="bi bi-play-btn me-1"></i>VIDEOS
+                </a>
+                <a href="?content=shorts" class="nav-item {% if content_type == 'shorts' %}active{% endif %}">
+                    <i class="bi bi-play-circle me-1"></i>SHORTS
+                </a>
+                <a href="?content=live" class="nav-item {% if content_type == 'live' %}active{% endif %}">
+                    <i class="bi bi-broadcast me-1"></i>LIVE
+                </a>
+                <a href="?content=playlists" class="nav-item {% if content_type == 'playlists' %}active{% endif %}">
+                    <i class="bi bi-collection me-1"></i>PLAYLISTS
+                </a>
+                <a href="{% url 'channel_about' creator.username %}" class="nav-item">
+                    <i class="bi bi-info-circle me-1"></i>ABOUT
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Channel Content -->
+    <div class="channel-content">
+        <div class="container-fluid">
+            <!-- Search and Sort Bar -->
+            <div class="content-controls mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <form method="get" class="search-form">
+                            <input type="hidden" name="content" value="{{ content_type }}">
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="q" 
+                                       class="form-control" 
+                                       placeholder="Search channel..." 
+                                       value="{{ search_query }}">
+                                <button type="submit" class="btn btn-outline-secondary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-6 text-end">
+                        {% if content_type == 'videos' %}
+                        <div class="sort-dropdown">
+                            <select class="form-select form-select-sm sort-select" onchange="this.form.submit()" name="sort">
+                                <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest</option>
+                                <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Popular</option>
+                                <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Video (for videos tab) -->
+            {% if content_type == 'videos' and featured_video and not search_query %}
+            <div class="featured-video mb-5">
+                <h3 class="section-title mb-3">Featured Video</h3>
+                <div class="featured-video-card">
+                    <a href="{% url 'video_detail' featured_video.video_id %}" class="featured-link">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <div class="featured-thumbnail">
+                                    <img src="{{ featured_video.thumbnail.url }}" 
+                                         alt="{{ featured_video.title }}" 
+                                         class="thumbnail-img">
+                                    <span class="video-duration">{{ featured_video.duration|date:"i:s" }}</span>
+                                    <div class="play-overlay">
+                                        <i class="bi bi-play-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="featured-info">
+                                    <h4 class="featured-title">{{ featured_video.title }}</h4>
+                                    <p class="featured-description">{{ featured_video.description|truncatewords:30 }}</p>
+                                    <div class="featured-stats">
+                                        <span class="stat">{{ featured_video.view_count|filesizeformat }} views</span>
+                                        <span class="stat">{{ featured_video.published_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                {% if content_type == 'videos' %}
+                    <!-- Videos Grid -->
+                    <div class="videos-grid">
+                        {% for video in videos %}
+                        <div class="video-card">
+                            <a href="{% url 'video_detail' video.video_id %}" class="video-link">
+                                <div class="video-thumbnail">
+                                    <img src="{{ video.thumbnail.url }}" 
+                                         alt="{{ video.title }}" 
+                                         class="thumbnail-img">
+                                    <span class="video-duration">{{ video.duration|date:"i:s" }}</span>
+                                    {% if video.video_type == 'premium' %}
+                                    <span class="premium-badge">Premium</span>
+                                    {% endif %}
+                                </div>
+                                <div class="video-info">
+                                    <h5 class="video-title">{{ video.title }}</h5>
+                                    <div class="video-meta">
+                                        <span class="views">{{ video.view_count|filesizeformat }} views</span>
+                                        <span class="date">{{ video.published_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="no-content text-center py-5">
+                            <i class="bi bi-play-btn display-1 text-muted"></i>
+                            <h4 class="mt-3">No videos found</h4>
+                            <p class="text-muted">
+                                {% if search_query %}
+                                    No videos match your search "{{ search_query }}"
+                                {% else %}
+                                    This channel hasn't uploaded any videos yet.
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                {% elif content_type == 'shorts' %}
+                    <!-- Shorts Grid -->
+                    <div class="shorts-grid">
+                        {% for short in shorts %}
+                        <div class="short-card">
+                            <a href="{% url 'video_detail' short.video_id %}" class="short-link">
+                                <div class="short-thumbnail">
+                                    <img src="{{ short.thumbnail.url }}" 
+                                         alt="{{ short.title }}" 
+                                         class="thumbnail-img">
+                                    <div class="short-overlay">
+                                        <i class="bi bi-play-fill"></i>
+                                    </div>
+                                    <div class="short-views">
+                                        <i class="bi bi-play-fill me-1"></i>
+                                        {{ short.view_count|filesizeformat }}
+                                    </div>
+                                </div>
+                                <h6 class="short-title">{{ short.title|truncatechars:50 }}</h6>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="no-content text-center py-5">
+                            <i class="bi bi-play-circle display-1 text-muted"></i>
+                            <h4 class="mt-3">No shorts found</h4>
+                            <p class="text-muted">This channel hasn't uploaded any shorts yet.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                {% elif content_type == 'live' %}
+                    <!-- Live Streams Grid -->
+                    <div class="live-grid">
+                        {% for stream in live_streams %}
+                        <div class="live-card">
+                            <a href="{% url 'stream_detail' stream.stream_id %}" class="live-link">
+                                <div class="live-thumbnail">
+                                    <img src="{{ stream.thumbnail.url }}" 
+                                         alt="{{ stream.title }}" 
+                                         class="thumbnail-img">
+                                    <div class="live-overlay">
+                                        {% if stream.status == 'live' %}
+                                        <span class="live-badge">
+                                            <span class="live-dot"></span>
+                                            LIVE
+                                        </span>
+                                        {% else %}
+                                        <span class="upcoming-badge">UPCOMING</span>
+                                        {% endif %}
+                                        <span class="viewer-count">
+                                            {{ stream.current_viewers|filesizeformat }} watching
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="live-info">
+                                    <h5 class="live-title">{{ stream.title }}</h5>
+                                    <div class="live-meta">
+                                        {% if stream.status == 'live' %}
+                                        <span class="status live">Live now</span>
+                                        {% else %}
+                                        <span class="status upcoming">
+                                            {{ stream.scheduled_start|timeuntil }} from now
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="no-content text-center py-5">
+                            <i class="bi bi-broadcast display-1 text-muted"></i>
+                            <h4 class="mt-3">No live streams</h4>
+                            <p class="text-muted">This channel hasn't streamed live yet.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                {% elif content_type == 'playlists' %}
+                    <!-- Playlists Grid -->
+                    <div class="playlists-grid">
+                        {% for playlist in playlists %}
+                        <div class="playlist-card">
+                            <a href="{% url 'playlist_detail' playlist.playlist_id %}" class="playlist-link">
+                                <div class="playlist-thumbnail">
+                                    {% if playlist.thumbnail %}
+                                    <img src="{{ playlist.thumbnail.url }}" 
+                                         alt="{{ playlist.title }}" 
+                                         class="thumbnail-img">
+                                    {% else %}
+                                    <div class="thumbnail-placeholder">
+                                        <i class="bi bi-collection-play"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="playlist-overlay">
+                                        <span class="video-count">
+                                            {{ playlist.video_count }} videos
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="playlist-info">
+                                    <h5 class="playlist-title">{{ playlist.title }}</h5>
+                                    <p class="playlist-meta">
+                                        {{ playlist.view_count|filesizeformat }} views • 
+                                        {{ playlist.video_count }} videos
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="no-content text-center py-5">
+                            <i class="bi bi-collection display-1 text-muted"></i>
+                            <h4 class="mt-3">No playlists</h4>
+                            <p class="text-muted">This channel hasn't created any playlists yet.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination (for videos) -->
+            {% if content_type == 'videos' and videos.has_other_pages %}
+            <nav class="pagination-container mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if videos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="?content={{ content_type }}&sort={{ sort_by }}&q={{ search_query }}&page={{ videos.previous_page_number }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in videos.paginator.page_range %}
+                        {% if videos.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > videos.number|add:'-3' and num < videos.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?content={{ content_type }}&sort={{ sort_by }}&q={{ search_query }}&page={{ num }}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if videos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="?content={{ content_type }}&sort={{ sort_by }}&q={{ search_query }}&page={{ videos.next_page_number }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .channel-page {
+        background: #f9f9f9;
+        min-height: 100vh;
+    }
+
+    /* Channel Header */
+    .channel-header {
+        background: white;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .channel-banner {
+        height: 200px;
+        overflow: hidden;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+    }
+
+    .banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .banner-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+    }
+
+    .channel-info {
+        padding: 30px 0;
+    }
+
+    .channel-avatar .avatar-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .channel-name {
+        font-size: 28px;
+        font-weight: 600;
+        color: #0f0f0f;
+        margin-bottom: 4px;
+    }
+
+    .verified-badge {
+        color: #065fd4;
+        font-size: 20px;
+    }
+
+    .channel-handle {
+        color: #606060;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .channel-stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 12px;
+    }
+
+    .stat-item {
+        color: #606060;
+        font-size: 14px;
+    }
+
+    .stat-item strong {
+        color: #0f0f0f;
+    }
+
+    .channel-bio {
+        color: #0f0f0f;
+        line-height: 1.5;
+        margin-bottom: 0;
+    }
+
+    .channel-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .follow-btn {
+        min-width: 120px;
+    }
+
+    .follow-btn.following {
+        background: #606060;
+        border-color: #606060;
+    }
+
+    /* Channel Navigation */
+    .channel-navigation {
+        background: white;
+        border-bottom: 1px solid #e5e5e5;
+        position: sticky;
+        top: 56px;
+        z-index: 100;
+    }
+
+    .channel-nav {
+        display: flex;
+        gap: 0;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .nav-item {
+        padding: 16px 24px;
+        text-decoration: none;
+        color: #606060;
+        font-weight: 500;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+        color: #0f0f0f;
+        border-bottom-color: #0f0f0f;
+    }
+
+    /* Content Controls */
+    .content-controls {
+        padding: 20px 0 0 0;
+    }
+
+    .search-form .form-control {
+        max-width: 400px;
+    }
+
+    .sort-dropdown {
+        display: inline-block;
+    }
+
+    .sort-select {
+        width: auto;
+    }
+
+    /* Featured Video */
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0f0f0f;
+    }
+
+    .featured-video-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .featured-video-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .featured-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .featured-thumbnail {
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+    }
+
+    .thumbnail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .video-duration {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .play-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .featured-video-card:hover .play-overlay {
+        opacity: 1;
+    }
+
+    .play-overlay i {
+        font-size: 48px;
+        color: white;
+    }
+
+    .featured-info {
+        padding: 20px;
+    }
+
+    .featured-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #0f0f0f;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .featured-description {
+        color: #606060;
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .featured-stats {
+        display: flex;
+        gap: 16px;
+    }
+
+    .featured-stats .stat {
+        color: #606060;
+        font-size: 14px;
+    }
+
+    /* Content Grids */
+    .videos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .video-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .video-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .video-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .video-thumbnail {
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+    }
+
+    .premium-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #ffd700;
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .video-info {
+        padding: 12px;
+    }
+
+    .video-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #0f0f0f;
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .video-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: #606060;
+    }
+
+    /* Shorts Grid */
+    .shorts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .short-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+
+    .short-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .short-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .short-thumbnail {
+        position: relative;
+        aspect-ratio: 9/16;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .short-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .short-card:hover .short-overlay {
+        opacity: 1;
+    }
+
+    .short-overlay i {
+        font-size: 32px;
+        color: white;
+    }
+
+    .short-views {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        color: white;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .short-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f0f0f;
+        margin: 0;
+        padding: 0 8px 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Live Grid */
+    .live-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .live-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .live-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .live-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .live-thumbnail {
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+    }
+
+    .live-overlay {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .live-badge {
+        background: #ff0000;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .live-dot {
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .upcoming-badge {
+        background: #ffa500;
+        color: black;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .viewer-count {
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .live-info {
+        padding: 12px;
+    }
+
+    .live-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #0f0f0f;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .live-meta {
+        font-size: 14px;
+        color: #606060;
+    }
+
+    .status.live {
+        color: #ff0000;
+        font-weight: 500;
+    }
+
+    .status.upcoming {
+        color: #ffa500;
+    }
+
+    /* Playlists Grid */
+    .playlists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .playlist-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .playlist-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .playlist-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .playlist-thumbnail {
+        position: relative;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e9ecef;
+        color: #6c757d;
+        font-size: 48px;
+    }
+
+    .playlist-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        padding: 8px;
+        color: white;
+        font-size: 12px;
+    }
+
+    .playlist-info {
+        padding: 12px;
+    }
+
+    .playlist-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #0f0f0f;
+        margin-bottom: 4px;
+        line-height: 1.4;
+    }
+
+    .playlist-meta {
+        font-size: 14px;
+        color: #606060;
+        margin: 0;
+    }
+
+    /* No Content State */
+    .no-content {
+        grid-column: 1 / -1;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        padding: 20px 0;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .channel-avatar .avatar-img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .channel-name {
+            font-size: 24px;
+        }
+
+        .channel-stats {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .channel-actions {
+            justify-content: flex-start;
+            margin-top: 16px;
+        }
+
+        .channel-nav {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        .videos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .shorts-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+
+        .live-grid,
+        .playlists-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .featured-video-card .row {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .channel-info {
+            padding: 20px 0;
+        }
+
+        .channel-avatar {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .channel-details {
+            text-align: center;
+        }
+
+        .content-controls .row {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sort-dropdown {
+            width: 100%;
+        }
+
+        .sort-select {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Follow/Unfollow functionality
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            const isFollowing = this.dataset.following === 'true';
+            const action = isFollowing ? 'unfollow' : 'follow';
+            
+            fetch(`/channel/${username}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.followed) {
+                        this.dataset.following = 'true';
+                        this.innerHTML = '<i class="bi bi-bell-fill me-1"></i>Following';
+                        this.classList.add('following');
+                    } else {
+                        this.dataset.following = 'false';
+                        this.innerHTML = '<i class="bi bi-bell me-1"></i>Follow';
+                        this.classList.remove('following');
+                    }
+                    
+                    // Update follower count in UI if needed
+                    console.log('Follower count:', data.follower_count);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+    
+    // Share channel functionality
+    document.querySelector('.share-channel-btn')?.addEventListener('click', function() {
+        const channelUrl = window.location.href;
+        
+        // Create temporary input to copy URL
+        const tempInput = document.createElement('input');
+        tempInput.value = channelUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Show notification
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        setTimeout(() => {
+            this.innerHTML = originalText;
+        }, 2000);
+    });
+    
+    // Auto-submit sort select
+    document.querySelector('.sort-select')?.addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>
+{% endblock %}

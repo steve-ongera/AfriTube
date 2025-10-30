@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Watch History - AfriTube{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h3 fw-bold mb-1">
+                        <i class="bi bi-clock-history text-primary me-2"></i>Watch History
+                    </h1>
+                    <p class="text-muted mb-0">Videos you've watched recently</p>
+                </div>
+                {% if history %}
+                <div>
+                    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#clearHistoryModal">
+                        <i class="bi bi-trash me-1"></i>Clear History
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        {% if history %}
+        <div class="history-list">
+            {% for item in history %}
+            <div class="history-item mb-3 p-3 rounded border">
+                <div class="row align-items-center">
+                    <div class="col-md-2 col-lg-1">
+                        <a href="{% url 'video_detail' item.video.video_id %}" class="position-relative">
+                            <img src="{{ item.video.thumbnail.url }}" alt="{{ item.video.title }}" 
+                                 class="w-100 rounded" style="aspect-ratio: 16/9;">
+                            <span class="position-absolute bottom-2 end-2 bg-dark text-white px-1 rounded small">
+                                {{ item.video.duration|date:"i:s" }}
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-7">
+                        <a href="{% url 'video_detail' item.video.video_id %}" class="text-decoration-none text-dark">
+                            <h6 class="mb-1 fw-semibold">{{ item.video.title }}</h6>
+                        </a>
+                        <div class="text-muted small mb-1">
+                            <a href="{% url 'channel' item.video.creator.username %}" class="text-decoration-none text-muted">
+                                {{ item.video.creator.channel_name|default:item.video.creator.username }}
+                                {% if item.video.creator.is_verified %}
+                                <i class="bi bi-patch-check-fill text-primary ms-1"></i>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="text-muted small">
+                            {{ item.video.view_count|filesizeformat }} views • 
+                            Last watched {{ item.last_watched|timesince }} ago
+                        </div>
+                        {% if item.last_position %}
+                        <div class="progress mt-2" style="height: 3px;">
+                            <div class="progress-bar" style="width: {{ item.last_position.total_seconds|divisibleby:item.video.duration.total_seconds|default:0|mul:100 }}%"></div>
+                        </div>
+                        <small class="text-muted">Watched {{ item.watch_count }} time{{ item.watch_count|pluralize }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 col-lg-4 text-end">
+                        <div class="btn-group">
+                            <a href="{% url 'video_detail' item.video.video_id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-play-fill me-1"></i>Watch Again
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split" 
+                                    data-bs-toggle="dropdown">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_to_watch_later' item.video.video_id %}">
+                                        <i class="bi bi-clock me-2"></i>Save to Watch Later
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_to_playlist' item.video.video_id %}">
+                                        <i class="bi bi-collection me-2"></i>Add to Playlist
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger remove-from-history" 
+                                       href="#" data-video-id="{{ item.video.video_id }}">
+                                        <i class="bi bi-trash me-2"></i>Remove from History
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if history.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if history.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ history.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in history.paginator.page_range %}
+                    {% if history.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > history.number|add:'-3' and num < history.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if history.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ history.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clock-history display-1 text-muted"></i>
+            <h4 class="mt-3">No Watch History</h4>
+            <p class="text-muted">Videos you watch will appear here</p>
+            <a href="{% url 'index' %}" class="btn btn-primary">Start Watching</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Clear History Modal -->
+<div class="modal fade" id="clearHistoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Clear Watch History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear your entire watch history? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'clear_history' %}" class="btn btn-danger">Clear History</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Remove from history functionality
+    document.querySelectorAll('.remove-from-history').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const videoId = this.dataset.videoId;
+            
+            if (confirm('Remove this video from your watch history?')) {
+                // Add AJAX call to remove from history
+                fetch(`/history/remove/${videoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('.history-item').remove();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

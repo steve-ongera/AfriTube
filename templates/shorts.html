@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shorts - AfriTube{% endblock %}
+
+{% block content %}
+<div class="shorts-page">
+    <!-- Shorts Navigation Header -->
+    <div class="shorts-header sticky-top bg-white py-2 border-bottom">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'index' %}" class="btn btn-icon me-2">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <h5 class="mb-0 fw-bold text-danger">
+                        <i class="bi bi-play-btn-fill me-2"></i>Shorts
+                    </h5>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-icon" data-bs-toggle="modal" data-bs-target="#searchModal">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shorts Container -->
+    <div class="shorts-container">
+        {% for short in shorts %}
+        <div class="short-video-item" data-video-id="{{ short.video_id }}">
+            <!-- Video Player -->
+            <div class="short-video-player">
+                <video 
+                    controls 
+                    preload="metadata"
+                    poster="{{ short.thumbnail.url }}"
+                    class="short-video"
+                    onclick="this.paused ? this.play() : this.pause()"
+                >
+                    <source src="{{ short.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <!-- Video Overlay Controls -->
+                <div class="short-video-overlay">
+                    <!-- Left side: Video info -->
+                    <div class="short-video-info">
+                        <a href="{% url 'channel' short.creator.username %}" class="text-decoration-none text-white">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ short.creator.get_profile_picture_url }}" 
+                                     class="creator-avatar me-2" alt="{{ short.creator.username }}">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ short.creator.channel_name|default:short.creator.username }}</h6>
+                                    <small class="text-white-50">{{ short.view_count|filesizeformat }} views</small>
+                                </div>
+                            </div>
+                        </a>
+                        
+                        <p class="short-description mb-2">{{ short.title }}</p>
+                        
+                        {% if short.tags.exists %}
+                        <div class="short-tags">
+                            {% for tag in short.tags.all|slice:":3" %}
+                            <span class="tag badge bg-dark bg-opacity-50 me-1">#{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Right side: Action buttons -->
+                    <div class="short-actions">
+                        <!-- Like Button -->
+                        <button class="short-action-btn like-btn" data-video-id="{{ short.video_id }}">
+                            <div class="action-icon">
+                                <i class="bi bi-heart"></i>
+                            </div>
+                            <span class="action-count">{{ short.like_count|filesizeformat }}</span>
+                        </button>
+                        
+                        <!-- Dislike Button -->
+                        <button class="short-action-btn dislike-btn" data-video-id="{{ short.video_id }}">
+                            <div class="action-icon">
+                                <i class="bi bi-heartbreak"></i>
+                            </div>
+                            <span class="action-count">{{ short.dislike_count|filesizeformat }}</span>
+                        </button>
+                        
+                        <!-- Comment Button -->
+                        <button class="short-action-btn comment-btn" data-video-id="{{ short.video_id }}">
+                            <div class="action-icon">
+                                <i class="bi bi-chat"></i>
+                            </div>
+                            <span class="action-count">{{ short.comment_count|filesizeformat }}</span>
+                        </button>
+                        
+                        <!-- Share Button -->
+                        <button class="short-action-btn share-btn" data-video-id="{{ short.video_id }}">
+                            <div class="action-icon">
+                                <i class="bi bi-share"></i>
+                            </div>
+                            <span class="action-count">Share</span>
+                        </button>
+                        
+                        <!-- More Options -->
+                        <button class="short-action-btn more-btn" data-bs-toggle="dropdown">
+                            <div class="action-icon">
+                                <i class="bi bi-three-dots"></i>
+                            </div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-flag"></i> Report</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-share"></i> Share</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-download"></i> Download</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-shorts text-center py-5">
+            <i class="bi bi-play-btn display-1 text-muted"></i>
+            <h4 class="mt-3">No Shorts Available</h4>
+            <p class="text-muted">There are no short videos uploaded yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if shorts.has_other_pages %}
+    <nav class="shorts-pagination py-4">
+        <div class="container-fluid">
+            <ul class="pagination justify-content-center">
+                {% if shorts.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ shorts.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in shorts.paginator.page_range %}
+                    {% if shorts.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > shorts.number|add:'-3' and num < shorts.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if shorts.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ shorts.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shorts-page {
+        background: #000;
+        min-height: 100vh;
+    }
+
+    .shorts-header {
+        background: rgba(0, 0, 0, 0.9) !important;
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+    }
+
+    .shorts-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .short-video-item {
+        width: 100%;
+        height: 100vh;
+        position: relative;
+        scroll-snap-align: start;
+    }
+
+    .short-video-player {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #000;
+    }
+
+    .short-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 0;
+    }
+
+    .short-video-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .short-video-info {
+        flex: 1;
+        max-width: 70%;
+    }
+
+    .creator-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .short-description {
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .short-tags {
+        margin-top: 8px;
+    }
+
+    .tag {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .short-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .short-action-btn {
+        background: none;
+        border: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: transform 0.2s;
+    }
+
+    .short-action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .action-count {
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .no-shorts {
+        color: white;
+        padding: 40px 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .short-video-overlay {
+            padding: 15px;
+        }
+        
+        .short-actions {
+            gap: 12px;
+        }
+        
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-play short videos when they come into view
+    const shortVideos = document.querySelectorAll('.short-video');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target;
+            if (entry.isIntersecting) {
+                video.play().catch(e => console.log('Auto-play prevented:', e));
+            } else {
+                video.pause();
+            }
+        });
+    }, { threshold: 0.8 });
+    
+    shortVideos.forEach(video => {
+        observer.observe(video);
+    });
+    
+    // Like/Dislike functionality
+    document.querySelectorAll('.like-btn, .dislike-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            const isLike = this.classList.contains('like-btn');
+            
+            // Add your AJAX call here
+            console.log(`${isLike ? 'Liking' : 'Disliking'} video:`, videoId);
+        });
+    });
+</script>
+{% endblock %}

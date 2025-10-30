@@ -69,6 +69,16 @@ class User(AbstractUser):
             models.Index(fields=['is_verified']),
         ]
     
+    def get_profile_picture_url(self):
+        """
+        Returns the URL of the profile picture if uploaded,
+        otherwise returns a default avatar URL.
+        """
+        if self.profile_picture and hasattr(self.profile_picture, 'url'):
+            return self.profile_picture.url
+        # Fallback avatar with username initials
+        return f"https://ui-avatars.com/api/?name={self.username}"
+    
     def __str__(self):
         return f"{self.username} ({self.get_user_type_display()})"
 
