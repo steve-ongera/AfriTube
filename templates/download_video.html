@@ -1,0 +1,655 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Download - {{ video.title }} - AfriTube{% endblock %}
+
+{% block content %}
+<div class="download-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Download Header -->
+                <div class="download-header text-center mb-5">
+                    <div class="download-icon">
+                        <i class="bi bi-download"></i>
+                    </div>
+                    <h1 class="download-title">Download Video</h1>
+                    <p class="download-subtitle">Your download is ready</p>
+                </div>
+
+                <!-- Video Information Card -->
+                <div class="video-info-card mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="video-thumbnail">
+                                <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail-img">
+                                <span class="video-duration">{{ video.duration|date:"i:s" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="video-details">
+                                <h3 class="video-title">{{ video.title }}</h3>
+                                <div class="creator-info">
+                                    <img src="{{ video.creator.get_profile_picture_url }}" 
+                                         alt="{{ video.creator.username }}" 
+                                         class="creator-avatar">
+                                    <span class="creator-name">
+                                        {{ video.creator.channel_name|default:video.creator.username }}
+                                        {% if video.creator.is_verified %}
+                                        <i class="bi bi-patch-check-fill text-primary ms-1"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="video-stats">
+                                    <span class="stat">{{ video.view_count|filesizeformat }} views</span>
+                                    <span class="stat">{{ video.download_count|filesizeformat }} downloads</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Information -->
+                <div class="download-info-card mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-file-earmark-medical"></i>
+                                <div class="info-content">
+                                    <span class="info-label">File Size</span>
+                                    <span class="info-value">{{ video.file_size|filesizeformat }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-clock"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Link Expires</span>
+                                    <span class="info-value">{{ download.expires_at|timeuntil }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-download"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Downloads Left</span>
+                                    <span class="info-value">1 (this link)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-shield-check"></i>
+                                <div class="info-content">
+                                    <span class="info-label">Security</span>
+                                    <span class="info-value">Personal use only</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Actions -->
+                <div class="download-actions-card text-center">
+                    <div class="action-buttons mb-4">
+                        <button id="startDownload" class="btn btn-primary btn-lg download-btn">
+                            <i class="bi bi-download me-2"></i>
+                            Start Download
+                        </button>
+                        
+                        <a href="{% url 'video_detail' video.video_id %}" class="btn btn-outline-secondary ms-2">
+                            <i class="bi bi-play-circle me-2"></i>
+                            Watch Online
+                        </a>
+                    </div>
+                    
+                    <div class="download-progress d-none">
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-text">Preparing download...</p>
+                    </div>
+                    
+                    <div class="alternative-options mt-4">
+                        <p class="text-muted mb-2">Having trouble downloading?</p>
+                        <button id="copyLink" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="bi bi-link-45deg me-1"></i>Copy Direct Link
+                        </button>
+                        <button id="newLink" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Generate New Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Download Instructions -->
+                <div class="instructions-card mt-4">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle me-2"></i>Download Instructions
+                    </h5>
+                    <div class="instructions-list">
+                        <div class="instruction-item">
+                            <span class="step-number">1</span>
+                            <span class="step-text">Click "Start Download" to begin</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="step-number">2</span>
+                            <span class="step-text">Save the file to your preferred location</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="step-number">3</span>
+                            <span class="step-text">The download link expires in 24 hours</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="step-number">4</span>
+                            <span class="step-text">This download is for personal use only</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="terms-card mt-4">
+                    <h6 class="terms-title">Terms of Download</h6>
+                    <ul class="terms-list">
+                        <li>This download is intended for personal, non-commercial use only</li>
+                        <li>Redistribution or public sharing of this content is prohibited</li>
+                        <li>You may not modify or create derivative works from this content</li>
+                        <li>The download link is valid for 24 hours and can only be used once</li>
+                        <li>By downloading, you agree to respect the creator's rights</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Download Complete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-check-circle-fill text-success display-4 mb-3"></i>
+                <p>Your download has been completed successfully.</p>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'video_detail' video.video_id %}" class="btn btn-primary">Watch Video</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Download Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-exclamation-circle-fill text-danger display-4 mb-3"></i>
+                <p id="errorMessage">An error occurred while downloading.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .download-page {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 100px 0 50px;
+    }
+
+    .download-header {
+        color: white;
+    }
+
+    .download-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .download-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .download-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .video-info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-thumbnail {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+    }
+
+    .thumbnail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .video-duration {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .video-details {
+        padding: 0 0 0 20px;
+    }
+
+    .video-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 12px;
+        line-height: 1.4;
+    }
+
+    .creator-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .creator-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .creator-name {
+        color: #4a5568;
+        font-weight: 500;
+    }
+
+    .video-stats {
+        display: flex;
+        gap: 16px;
+    }
+
+    .video-stats .stat {
+        color: #718096;
+        font-size: 14px;
+    }
+
+    .download-info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+    .info-item i {
+        font-size: 20px;
+        color: #667eea;
+        width: 24px;
+        text-align: center;
+    }
+
+    .info-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #718096;
+        margin-bottom: 2px;
+    }
+
+    .info-value {
+        font-size: 14px;
+        color: #2d3748;
+        font-weight: 500;
+    }
+
+    .download-actions-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .download-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        padding: 16px 32px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .download-progress .progress {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .progress-bar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        color: #718096;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .instructions-card,
+    .terms-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+        color: #2d3748;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .instructions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .instruction-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .step-number {
+        background: #667eea;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .step-text {
+        color: #4a5568;
+        font-size: 14px;
+    }
+
+    .terms-title {
+        color: #2d3748;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .terms-list {
+        color: #4a5568;
+        font-size: 14px;
+        padding-left: 20px;
+        margin: 0;
+    }
+
+    .terms-list li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .download-page {
+            padding: 80px 0 30px;
+        }
+
+        .download-title {
+            font-size: 2rem;
+        }
+
+        .download-subtitle {
+            font-size: 1rem;
+        }
+
+        .video-details {
+            padding: 20px 0 0 0;
+        }
+
+        .video-title {
+            font-size: 1.2rem;
+        }
+
+        .download-btn {
+            padding: 14px 24px;
+            font-size: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+            margin: 0 !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .download-header {
+            margin-bottom: 30px;
+        }
+
+        .download-icon {
+            font-size: 48px;
+        }
+
+        .download-title {
+            font-size: 1.8rem;
+        }
+
+        .video-info-card,
+        .download-info-card,
+        .download-actions-card,
+        .instructions-card,
+        .terms-card {
+            padding: 20px;
+        }
+
+        .info-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 8px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDownloadBtn = document.getElementById('startDownload');
+        const downloadProgress = document.querySelector('.download-progress');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.progress-text');
+        const copyLinkBtn = document.getElementById('copyLink');
+        const newLinkBtn = document.getElementById('newLink');
+
+        // Start download
+        startDownloadBtn.addEventListener('click', function() {
+            // Show progress
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Preparing...';
+            downloadProgress.classList.remove('d-none');
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = progress + '%';
+                
+                if (progress < 30) {
+                    progressText.textContent = 'Initializing download...';
+                } else if (progress < 60) {
+                    progressText.textContent = 'Processing video file...';
+                } else {
+                    progressText.textContent = 'Finalizing download...';
+                }
+            }, 300);
+
+            // Initiate actual download
+            fetch(`/download/{{ download.download_token }}/initiate/`)
+                .then(response => {
+                    clearInterval(progressInterval);
+                    
+                    if (response.ok) {
+                        progressBar.style.width = '100%';
+                        progressText.textContent = 'Download complete!';
+                        
+                        // Trigger file download
+                        return response.blob().then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = '{{ video.title|slugify }}_{{ video.video_id }}.mp4';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            
+                            // Show success modal
+                            setTimeout(() => {
+                                $('#successModal').modal('show');
+                            }, 1000);
+                        });
+                    } else {
+                        throw new Error('Download failed');
+                    }
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    console.error('Download error:', error);
+                    
+                    // Show error modal
+                    document.getElementById('errorMessage').textContent = 
+                        'Failed to download video. Please try again.';
+                    $('#errorModal').modal('show');
+                    
+                    // Reset button
+                    startDownloadBtn.disabled = false;
+                    startDownloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Start Download';
+                    downloadProgress.classList.add('d-none');
+                });
+        });
+
+        // Copy direct link
+        copyLinkBtn.addEventListener('click', function() {
+            const downloadUrl = window.location.href;
+            
+            navigator.clipboard.writeText(downloadUrl).then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        });
+
+        // Generate new download link
+        newLinkBtn.addEventListener('click', function() {
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>Generating...';
+            
+            fetch(`/video/{{ video.video_id }}/new-download-link/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to new download page
+                    window.location.href = data.download_url;
+                } else {
+                    alert('Failed to generate new link: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to generate new download link');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = originalText;
+            });
+        });
+
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            .spin {
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

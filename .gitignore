@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.whl
+*.egg-info/
+.eggs/
+*.log
+
+# Django
+*.sqlite3
+db.sqlite3
+/media/
+staticfiles/
+static/
+
+# Environment
+.env
+.env.local
+*.env
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Byte-compiled
+*.pyc
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Compiled C extensions
+*.so
+
+# Pipenv
+Pipfile.lock
+
+# mypy
+.mypy_cache/
+
+# pytest
+.pytest_cache/
+
+# Coverage
+htmlcov/
+.coverage*
+.cache
+
+# Build
+build/
+dist/

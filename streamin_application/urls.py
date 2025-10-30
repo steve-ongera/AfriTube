@@ -27,6 +27,13 @@ urlpatterns = [
     path('video/<uuid:video_id>/watch-later/', views.toggle_watch_later, name='toggle_watch_later'),
     path('video/<uuid:video_id>/purchase/', views.purchase_video, name='purchase_video'),
 
+    # Download URLs
+    path('video/<uuid:video_id>/download/', views.download_video, name='download_video'),
+    path('download/<uuid:download_token>/', views.download_page, name='download_page'),
+    path('download/<uuid:download_token>/initiate/', views.initiate_download, name='initiate_download'),
+    path('downloads/', views.user_downloads, name='user_downloads'),
+    path('video/<uuid:video_id>/new-download-link/', views.generate_new_download_link, name='generate_new_download_link'),
+
     # Channel URLs
     path('channel/<str:username>/', views.channel, name='channel'),
     path('channel/<str:username>/videos/', views.channel_videos, name='channel_videos'),

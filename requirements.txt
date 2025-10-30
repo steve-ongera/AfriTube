@@ -1,0 +1,13 @@
+Django==5.2.4
+psycopg2-binary==2.9.9        # PostgreSQL driver
+python-dotenv==1.0.1          # Environment variables
+Pillow==10.3.0                # Image handling (profile pictures, thumbnails)
+django-crispy-forms==2.1      # Forms styling (optional)
+crispy-bootstrap5==0.7        # Bootstrap 5 crispy forms support
+djangorestframework==3.15.1   # API for mobile app or JS frontend
+channels==4.1.0               # WebSockets (live streaming chat, real time features)
+redis==5.0.1                  # Redis for Channels + caching
+django-cors-headers==4.4.0    # Allow frontend access (React/Vue/Flutter apps)
+whitenoise==6.6.0             # Static files in production
+gunicorn==22.0.0              # Server for deployment (Linux/Render/Heroku)
+django-filter==24.2           # Query/search filter support

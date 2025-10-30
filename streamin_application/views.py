@@ -729,6 +729,209 @@ def purchase_video(request, video_id):
 
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from django.core.exceptions import PermissionDenied
+import uuid
+import os
+from wsgiref.util import FileWrapper
+import mimetypes
+
+@login_required
+def download_video(request, video_id):
+    """Download video file with authentication and tracking"""
+    video = get_object_or_404(
+        Video.objects.select_related('creator'),
+        video_id=video_id,
+        status='published'
+    )
+    
+    # Check if video allows downloads
+    if not video.allow_downloads:
+        raise PermissionDenied("This video does not allow downloads")
+    
+    # Check access for premium/PPV videos
+    has_access = True
+    if video.video_type in ['premium', 'pay_per_view']:
+        if video.video_type == 'premium':
+            has_access = request.user.subscriptions.filter(
+                creator=video.creator, 
+                status='active'
+            ).exists()
+        elif video.video_type == 'pay_per_view':
+            has_access = VideoPurchase.objects.filter(
+                video=video,
+                user=request.user,
+                payment_status='completed'
+            ).exists()
+        
+        if not has_access:
+            return redirect('purchase_video', video_id=video_id)
+    
+    # Generate download token
+    download_token = str(uuid.uuid4())
+    
+    # Create download record
+    download = VideoDownload.objects.create(
+        video=video,
+        user=request.user,
+        download_token=download_token,
+        download_url=video.video_file.url,
+        ip_address=get_client_ip(request),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        expires_at=timezone.now() + timezone.timedelta(hours=24)
+    )
+    
+    # Update download count
+    video.download_count += 1
+    video.save()
+    
+    # Redirect to download page with token
+    return redirect('download_page', download_token=download_token)
+
+def download_page(request, download_token):
+    """Download page with actual file download"""
+    download = get_object_or_404(
+        VideoDownload.objects.select_related('video', 'video__creator'),
+        download_token=download_token
+    )
+    
+    # Check if download is valid and not expired
+    if download.is_used:
+        return render(request, 'download_error.html', {
+            'error': 'This download link has already been used.',
+            'video': download.video
+        })
+    
+    if download.expires_at < timezone.now():
+        return render(request, 'download_error.html', {
+            'error': 'This download link has expired.',
+            'video': download.video
+        })
+    
+    # Check if user owns the download
+    if request.user != download.user:
+        raise PermissionDenied("You don't have permission to access this download")
+    
+    context = {
+        'download': download,
+        'video': download.video,
+        'page_title': f'Download - {download.video.title}',
+    }
+    
+    return render(request, 'download_video.html', context)
+
+@login_required
+def initiate_download(request, download_token):
+    """Initiate actual file download"""
+    download = get_object_or_404(
+        VideoDownload,
+        download_token=download_token,
+        user=request.user
+    )
+    
+    # Validate download
+    if download.is_used:
+        return JsonResponse({'success': False, 'error': 'Download link already used'})
+    
+    if download.expires_at < timezone.now():
+        return JsonResponse({'success': False, 'error': 'Download link expired'})
+    
+    try:
+        video_file = download.video.video_file
+        file_path = video_file.path
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return JsonResponse({'success': False, 'error': 'Video file not found'})
+        
+        # Mark download as used
+        download.is_used = True
+        download.downloaded_at = timezone.now()
+        download.save()
+        
+        # Prepare file for download
+        file_size = os.path.getsize(file_path)
+        filename = f"{download.video.title.replace(' ', '_')}_{download.video.video_id}.mp4"
+        
+        # Create response with file
+        response = HttpResponse(FileWrapper(open(file_path, 'rb')), content_type='video/mp4')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = file_size
+        response['X-Accel-Redirect'] = f'/protected/{video_file.name}'  # For nginx
+        
+        return response
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def user_downloads(request):
+    """User's download history"""
+    downloads = VideoDownload.objects.filter(
+        user=request.user
+    ).select_related('video', 'video__creator').order_by('-created_at')
+    
+    paginator = Paginator(downloads, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'downloads': page_obj,
+        'page_title': 'My Downloads',
+    }
+    
+    return render(request, 'user_downloads.html', context)
+
+@login_required
+def generate_new_download_link(request, video_id):
+    """Generate new download link for a video"""
+    video = get_object_or_404(Video, video_id=video_id, status='published')
+    
+    if not video.allow_downloads:
+        return JsonResponse({'success': False, 'error': 'Video does not allow downloads'})
+    
+    # Check access
+    has_access = True
+    if video.video_type in ['premium', 'pay_per_view']:
+        if video.video_type == 'premium':
+            has_access = request.user.subscriptions.filter(
+                creator=video.creator, 
+                status='active'
+            ).exists()
+        elif video.video_type == 'pay_per_view':
+            has_access = VideoPurchase.objects.filter(
+                video=video,
+                user=request.user,
+                payment_status='completed'
+            ).exists()
+    
+    if not has_access:
+        return JsonResponse({'success': False, 'error': 'No access to this video'})
+    
+    # Generate new download token
+    download_token = str(uuid.uuid4())
+    
+    download = VideoDownload.objects.create(
+        video=video,
+        user=request.user,
+        download_token=download_token,
+        download_url=video.video_file.url,
+        ip_address=get_client_ip(request),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        expires_at=timezone.now() + timezone.timedelta(hours=24)
+    )
+    
+    new_url = request.build_absolute_uri(f'/download/{download_token}/')
+    
+    return JsonResponse({
+        'success': True,
+        'download_url': new_url,
+        'expires_at': download.expires_at.isoformat()
+    })
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
 from django.core.paginator import Paginator
