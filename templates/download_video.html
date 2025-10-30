@@ -1,655 +1,653 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Download - {{ video.title }} - AfriTube{% endblock %}
-
-{% block content %}
-<div class="download-page">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Download Header -->
-                <div class="download-header text-center mb-5">
-                    <div class="download-icon">
-                        <i class="bi bi-download"></i>
-                    </div>
-                    <h1 class="download-title">Download Video</h1>
-                    <p class="download-subtitle">Your download is ready</p>
-                </div>
-
-                <!-- Video Information Card -->
-                <div class="video-info-card mb-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-4">
-                            <div class="video-thumbnail">
-                                <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail-img">
-                                <span class="video-duration">{{ video.duration|date:"i:s" }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="video-details">
-                                <h3 class="video-title">{{ video.title }}</h3>
-                                <div class="creator-info">
-                                    <img src="{{ video.creator.get_profile_picture_url }}" 
-                                         alt="{{ video.creator.username }}" 
-                                         class="creator-avatar">
-                                    <span class="creator-name">
-                                        {{ video.creator.channel_name|default:video.creator.username }}
-                                        {% if video.creator.is_verified %}
-                                        <i class="bi bi-patch-check-fill text-primary ms-1"></i>
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div class="video-stats">
-                                    <span class="stat">{{ video.view_count|filesizeformat }} views</span>
-                                    <span class="stat">{{ video.download_count|filesizeformat }} downloads</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Download Information -->
-                <div class="download-info-card mb-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <i class="bi bi-file-earmark-medical"></i>
-                                <div class="info-content">
-                                    <span class="info-label">File Size</span>
-                                    <span class="info-value">{{ video.file_size|filesizeformat }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <i class="bi bi-clock"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Link Expires</span>
-                                    <span class="info-value">{{ download.expires_at|timeuntil }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <i class="bi bi-download"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Downloads Left</span>
-                                    <span class="info-value">1 (this link)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <i class="bi bi-shield-check"></i>
-                                <div class="info-content">
-                                    <span class="info-label">Security</span>
-                                    <span class="info-value">Personal use only</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Download Actions -->
-                <div class="download-actions-card text-center">
-                    <div class="action-buttons mb-4">
-                        <button id="startDownload" class="btn btn-primary btn-lg download-btn">
-                            <i class="bi bi-download me-2"></i>
-                            Start Download
-                        </button>
-                        
-                        <a href="{% url 'video_detail' video.video_id %}" class="btn btn-outline-secondary ms-2">
-                            <i class="bi bi-play-circle me-2"></i>
-                            Watch Online
-                        </a>
-                    </div>
-                    
-                    <div class="download-progress d-none">
-                        <div class="progress mb-3">
-                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                        </div>
-                        <p class="progress-text">Preparing download...</p>
-                    </div>
-                    
-                    <div class="alternative-options mt-4">
-                        <p class="text-muted mb-2">Having trouble downloading?</p>
-                        <button id="copyLink" class="btn btn-outline-primary btn-sm me-2">
-                            <i class="bi bi-link-45deg me-1"></i>Copy Direct Link
-                        </button>
-                        <button id="newLink" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Generate New Link
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Download Instructions -->
-                <div class="instructions-card mt-4">
-                    <h5 class="card-title">
-                        <i class="bi bi-info-circle me-2"></i>Download Instructions
-                    </h5>
-                    <div class="instructions-list">
-                        <div class="instruction-item">
-                            <span class="step-number">1</span>
-                            <span class="step-text">Click "Start Download" to begin</span>
-                        </div>
-                        <div class="instruction-item">
-                            <span class="step-number">2</span>
-                            <span class="step-text">Save the file to your preferred location</span>
-                        </div>
-                        <div class="instruction-item">
-                            <span class="step-number">3</span>
-                            <span class="step-text">The download link expires in 24 hours</span>
-                        </div>
-                        <div class="instruction-item">
-                            <span class="step-number">4</span>
-                            <span class="step-text">This download is for personal use only</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Terms and Conditions -->
-                <div class="terms-card mt-4">
-                    <h6 class="terms-title">Terms of Download</h6>
-                    <ul class="terms-list">
-                        <li>This download is intended for personal, non-commercial use only</li>
-                        <li>Redistribution or public sharing of this content is prohibited</li>
-                        <li>You may not modify or create derivative works from this content</li>
-                        <li>The download link is valid for 24 hours and can only be used once</li>
-                        <li>By downloading, you agree to respect the creator's rights</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Download Complete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="bi bi-check-circle-fill text-success display-4 mb-3"></i>
-                <p>Your download has been completed successfully.</p>
-            </div>
-            <div class="modal-footer">
-                <a href="{% url 'video_detail' video.video_id %}" class="btn btn-primary">Watch Video</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Error Modal -->
-<div class="modal fade" id="errorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Download Error</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="bi bi-exclamation-circle-fill text-danger display-4 mb-3"></i>
-                <p id="errorMessage">An error occurred while downloading.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+{% block title %}{{ page_title }} - AfriTube{% endblock %}
 
 {% block extra_css %}
 <style>
-    .download-page {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 100px 0 50px;
+    :root {
+        --primary-color: #ff0000;
+        --primary-hover: #cc0000;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9f9f9;
+        --border-color: #e5e5e5;
+        --text-primary: #0f0f0f;
+        --text-secondary: #606060;
+        --text-tertiary: #909090;
+        --success-color: #065fd4;
+        --warning-color: #ff6b00;
     }
 
-    .download-header {
+    body {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .purchase-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .purchase-card {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .purchase-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--warning-color));
+        padding: 2rem;
+        text-align: center;
         color: white;
     }
 
-    .download-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-        color: rgba(255, 255, 255, 0.9);
+    .purchase-header-icon {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.95;
     }
 
-    .download-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
+    .purchase-header h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
     }
 
-    .download-subtitle {
-        font-size: 1.2rem;
-        opacity: 0.9;
+    .purchase-header p {
+        font-size: 1rem;
+        opacity: 0.95;
+        margin: 0;
     }
 
-    .video-info-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    .purchase-body {
+        padding: 2rem;
     }
 
-    .video-thumbnail {
-        position: relative;
-        border-radius: 12px;
+    .video-preview {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .video-preview-thumbnail {
+        flex-shrink: 0;
+        width: 280px;
+        height: 158px;
+        border-radius: 8px;
         overflow: hidden;
-        aspect-ratio: 16/9;
+        position: relative;
+        background: #000;
     }
 
-    .thumbnail-img {
+    .video-preview-thumbnail img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    .video-duration {
+    .video-preview-overlay {
         position: absolute;
-        bottom: 8px;
-        right: 8px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .video-details {
-        padding: 0 0 0 20px;
-    }
-
-    .video-title {
-        font-size: 1.4rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 12px;
-        line-height: 1.4;
-    }
-
-    .creator-info {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+        justify-content: center;
     }
 
-    .creator-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .creator-name {
-        color: #4a5568;
-        font-weight: 500;
-    }
-
-    .video-stats {
-        display: flex;
-        gap: 16px;
-    }
-
-    .video-stats .stat {
-        color: #718096;
-        font-size: 14px;
-    }
-
-    .download-info-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 0;
-    }
-
-    .info-item i {
-        font-size: 20px;
-        color: #667eea;
-        width: 24px;
-        text-align: center;
-    }
-
-    .info-content {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info-label {
-        font-size: 12px;
-        color: #718096;
-        margin-bottom: 2px;
-    }
-
-    .info-value {
-        font-size: 14px;
-        color: #2d3748;
-        font-weight: 500;
-    }
-
-    .download-actions-card {
-        background: white;
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .download-btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border: none;
-        padding: 16px 32px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        border-radius: 12px;
-        transition: all 0.3s;
-    }
-
-    .download-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    }
-
-    .download-progress .progress {
-        height: 8px;
-        border-radius: 4px;
-    }
-
-    .progress-bar {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        transition: width 0.3s ease;
-    }
-
-    .progress-text {
-        color: #718096;
-        font-size: 14px;
-        margin: 0;
-    }
-
-    .instructions-card,
-    .terms-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-title {
-        color: #2d3748;
-        font-weight: 600;
-        margin-bottom: 16px;
-    }
-
-    .instructions-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .instruction-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .step-number {
-        background: #667eea;
-        color: white;
-        width: 24px;
-        height: 24px;
+    .lock-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.9);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+
+    .video-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .video-preview-info h2 {
+        font-size: 1.25rem;
         font-weight: 600;
+        margin: 0 0 0.75rem 0;
+        color: var(--text-primary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
-    .step-text {
-        color: #4a5568;
-        font-size: 14px;
+    .video-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
     }
 
-    .terms-title {
-        color: #2d3748;
+    .video-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .video-meta-item i {
+        font-size: 1rem;
+    }
+
+    .video-description {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .price-section {
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .price-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .price-label i {
+        font-size: 1rem;
+    }
+
+    .price-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1;
+    }
+
+    .price-currency {
+        font-size: 1.5rem;
+        vertical-align: super;
+    }
+
+    .price-note {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+    }
+
+    .price-note i {
+        font-size: 1rem;
+    }
+
+    .features-section {
+        margin-bottom: 2rem;
+    }
+
+    .features-section h3 {
+        font-size: 1.125rem;
         font-weight: 600;
-        margin-bottom: 12px;
+        margin: 0 0 1rem 0;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .terms-list {
-        color: #4a5568;
-        font-size: 14px;
-        padding-left: 20px;
+    .features-section h3 i {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
         margin: 0;
     }
 
-    .terms-list li {
-        margin-bottom: 8px;
-        line-height: 1.4;
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
     }
 
-    /* Responsive Design */
+    .feature-item:last-child {
+        border-bottom: none;
+    }
+
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .feature-text {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+    }
+
+    .payment-methods {
+        margin-bottom: 2rem;
+    }
+
+    .payment-methods h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .payment-methods h3 i {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+    }
+
+    .payment-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .payment-option {
+        padding: 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--bg-primary);
+    }
+
+    .payment-option:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .payment-option.selected {
+        border-color: var(--primary-color);
+        background: #fff5f5;
+    }
+
+    .payment-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .payment-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.875rem 2rem;
+        border-radius: 24px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn i {
+        font-size: 1.125rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+        flex: 1;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: var(--bg-secondary);
+        border-color: var(--text-tertiary);
+    }
+
+    .security-notice {
+        background: #e3f2fd;
+        border-left: 4px solid var(--success-color);
+        padding: 1rem 1.25rem;
+        border-radius: 4px;
+        margin-top: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .security-icon {
+        color: var(--success-color);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+
+    .security-text {
+        font-size: 0.875rem;
+        color: #01579b;
+        line-height: 1.5;
+    }
+
     @media (max-width: 768px) {
-        .download-page {
-            padding: 80px 0 30px;
+        .purchase-container {
+            margin: 1rem auto;
+            padding: 0 0.75rem;
         }
 
-        .download-title {
-            font-size: 2rem;
+        .purchase-header {
+            padding: 1.5rem 1rem;
         }
 
-        .download-subtitle {
-            font-size: 1rem;
+        .purchase-header h1 {
+            font-size: 1.5rem;
         }
 
-        .video-details {
-            padding: 20px 0 0 0;
+        .purchase-body {
+            padding: 1.5rem 1rem;
         }
 
-        .video-title {
-            font-size: 1.2rem;
+        .video-preview {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
         }
 
-        .download-btn {
-            padding: 14px 24px;
-            font-size: 1rem;
+        .video-preview-thumbnail {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+        }
+
+        .price-amount {
+            font-size: 2.5rem;
+        }
+
+        .price-section {
+            padding: 1.5rem 1rem;
         }
 
         .action-buttons {
-            display: flex;
             flex-direction: column;
-            gap: 12px;
         }
 
-        .action-buttons .btn {
-            width: 100%;
-            margin: 0 !important;
+        .payment-options {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
-    @media (max-width: 576px) {
-        .download-header {
-            margin-bottom: 30px;
-        }
-
-        .download-icon {
-            font-size: 48px;
-        }
-
-        .download-title {
-            font-size: 1.8rem;
-        }
-
-        .video-info-card,
-        .download-info-card,
-        .download-actions-card,
-        .instructions-card,
-        .terms-card {
-            padding: 20px;
-        }
-
-        .info-item {
+    @media (max-width: 480px) {
+        .video-meta {
             flex-direction: column;
-            text-align: center;
-            gap: 8px;
+            gap: 0.5rem;
+        }
+
+        .payment-options {
+            grid-template-columns: 1fr;
+        }
+
+        .features-section h3,
+        .payment-methods h3 {
+            font-size: 1rem;
         }
     }
 </style>
 {% endblock %}
 
-{% block extra_js %}
+{% block content %}
+<div class="purchase-container">
+    <div class="purchase-card">
+        <!-- Header -->
+        <div class="purchase-header">
+            <div class="purchase-header-icon">
+                <i class="bi bi-lock-fill"></i>
+            </div>
+            <h1>Purchase Premium Content</h1>
+            <p>Get instant access to this exclusive video</p>
+        </div>
+
+        <!-- Body -->
+        <div class="purchase-body">
+            <!-- Video Preview -->
+            <div class="video-preview">
+                <div class="video-preview-thumbnail">
+                    <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}">
+                    <div class="video-preview-overlay">
+                        <div class="lock-icon">
+                            <i class="bi bi-lock-fill"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-preview-info">
+                    <h2>{{ video.title }}</h2>
+                    <div class="video-meta">
+                        <span class="video-meta-item">
+                            <i class="bi bi-person-circle"></i>
+                            <strong>{{ video.creator.channel_name|default:video.creator.username }}</strong>
+                        </span>
+                        <span class="video-meta-item">
+                            <i class="bi bi-clock"></i>
+                            <span>{{ video.duration }}</span>
+                        </span>
+                        <span class="video-meta-item">
+                            <i class="bi bi-eye"></i>
+                            <span>{{ video.view_count|default:0 }} views</span>
+                        </span>
+                        {% if video.category %}
+                        <span class="video-meta-item">
+                            <i class="bi bi-folder"></i>
+                            <span>{{ video.category.name }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="video-description">{{ video.description|truncatewords:30 }}</p>
+                </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="price-section">
+                <div class="price-label">
+                    <i class="bi bi-tag"></i>
+                    <span>One-time Payment</span>
+                </div>
+                <h2 class="price-amount">
+                    <span class="price-currency">$</span>{{ video.price }}
+                </h2>
+                <p class="price-note">
+                    <i class="bi bi-infinity"></i>
+                    <span>Lifetime access • No recurring charges</span>
+                </p>
+            </div>
+
+            <!-- Features -->
+            <div class="features-section">
+                <h3>
+                    <i class="bi bi-gift"></i>
+                    <span>What You'll Get:</span>
+                </h3>
+                <ul class="features-list">
+                    <li class="feature-item">
+                        <span class="feature-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <span class="feature-text">Unlimited lifetime access to this video</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <span class="feature-text">Watch in {{ video.quality }} quality</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <span class="feature-text">Stream on any device</span>
+                    </li>
+                    {% if video.allow_downloads %}
+                    <li class="feature-item">
+                        <span class="feature-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <span class="feature-text">Download for offline viewing</span>
+                    </li>
+                    {% endif %}
+                    <li class="feature-item">
+                        <span class="feature-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <span class="feature-text">Support the creator directly</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <h3>
+                    <i class="bi bi-credit-card"></i>
+                    <span>Choose Payment Method:</span>
+                </h3>
+                <form method="POST" id="purchaseForm">
+                    {% csrf_token %}
+                    <div class="payment-options">
+                        <label class="payment-option" for="mpesa">
+                            <input type="radio" name="payment_method" id="mpesa" value="mpesa" hidden>
+                            <div class="payment-icon">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <div class="payment-name">M-Pesa</div>
+                        </label>
+                        <label class="payment-option" for="card">
+                            <input type="radio" name="payment_method" id="card" value="stripe" hidden checked>
+                            <div class="payment-icon">
+                                <i class="bi bi-credit-card-2-front"></i>
+                            </div>
+                            <div class="payment-name">Card</div>
+                        </label>
+                        <label class="payment-option" for="paypal">
+                            <input type="radio" name="payment_method" id="paypal" value="paypal" hidden>
+                            <div class="payment-icon">
+                                <i class="bi bi-paypal"></i>
+                            </div>
+                            <div class="payment-name">PayPal</div>
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <a href="{% url 'video_detail' video.video_id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Back to Video</span>
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-unlock"></i>
+                            <span>Purchase Now - ${{ video.price }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <i class="bi bi-shield-check security-icon"></i>
+                <div class="security-text">
+                    <strong>Secure Payment:</strong> Your payment information is encrypted and secure. 
+                    All transactions are processed through trusted payment providers.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const startDownloadBtn = document.getElementById('startDownload');
-        const downloadProgress = document.querySelector('.download-progress');
-        const progressBar = document.querySelector('.progress-bar');
-        const progressText = document.querySelector('.progress-text');
-        const copyLinkBtn = document.getElementById('copyLink');
-        const newLinkBtn = document.getElementById('newLink');
+    // Payment method selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const radioInputs = document.querySelectorAll('input[name="payment_method"]');
 
-        // Start download
-        startDownloadBtn.addEventListener('click', function() {
-            // Show progress
-            this.disabled = true;
-            this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Preparing...';
-            downloadProgress.classList.remove('d-none');
-            
-            // Simulate progress
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 10;
-                if (progress > 90) progress = 90;
-                progressBar.style.width = progress + '%';
-                
-                if (progress < 30) {
-                    progressText.textContent = 'Initializing download...';
-                } else if (progress < 60) {
-                    progressText.textContent = 'Processing video file...';
-                } else {
-                    progressText.textContent = 'Finalizing download...';
-                }
-            }, 300);
-
-            // Initiate actual download
-            fetch(`/download/{{ download.download_token }}/initiate/`)
-                .then(response => {
-                    clearInterval(progressInterval);
-                    
-                    if (response.ok) {
-                        progressBar.style.width = '100%';
-                        progressText.textContent = 'Download complete!';
-                        
-                        // Trigger file download
-                        return response.blob().then(blob => {
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.style.display = 'none';
-                            a.href = url;
-                            a.download = '{{ video.title|slugify }}_{{ video.video_id }}.mp4';
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            
-                            // Show success modal
-                            setTimeout(() => {
-                                $('#successModal').modal('show');
-                            }, 1000);
-                        });
-                    } else {
-                        throw new Error('Download failed');
-                    }
-                })
-                .catch(error => {
-                    clearInterval(progressInterval);
-                    console.error('Download error:', error);
-                    
-                    // Show error modal
-                    document.getElementById('errorMessage').textContent = 
-                        'Failed to download video. Please try again.';
-                    $('#errorModal').modal('show');
-                    
-                    // Reset button
-                    startDownloadBtn.disabled = false;
-                    startDownloadBtn.innerHTML = '<i class="bi bi-download me-2"></i>Start Download';
-                    downloadProgress.classList.add('d-none');
-                });
+    paymentOptions.forEach((option, index) => {
+        option.addEventListener('click', () => {
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            radioInputs[index].checked = true;
         });
+    });
 
-        // Copy direct link
-        copyLinkBtn.addEventListener('click', function() {
-            const downloadUrl = window.location.href;
-            
-            navigator.clipboard.writeText(downloadUrl).then(() => {
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
-        });
+    // Set initial selected state
+    document.querySelector('input[name="payment_method"]:checked').closest('.payment-option').classList.add('selected');
 
-        // Generate new download link
-        newLinkBtn.addEventListener('click', function() {
-            this.disabled = true;
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>Generating...';
-            
-            fetch(`/video/{{ video.video_id }}/new-download-link/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to new download page
-                    window.location.href = data.download_url;
-                } else {
-                    alert('Failed to generate new link: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to generate new download link');
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = originalText;
-            });
-        });
-
-        // Add spin animation
-        const style = document.createElement('style');
-        style.textContent = `
-            .spin {
-                animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
+    // Form submission
+    document.getElementById('purchaseForm').addEventListener('submit', (e) => {
+        const submitBtn = e.target.querySelector('.btn-primary');
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Processing...</span>';
+        submitBtn.disabled = true;
     });
 </script>
 {% endblock %}
