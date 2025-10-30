@@ -373,7 +373,7 @@ class LiveStreamViewer(models.Model):
 
 class LiveStreamChat(models.Model):
     """Live stream chat messages"""
-    stream = models.ForeignKey(LiveStream, on_delete=models.CASCADE, related_name='chat_messages')
+    stream = models.ForeignKey(LiveStream, on_delete=models.CASCADE, related_name='chats')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stream_messages')
     message = models.TextField(max_length=500)
     is_deleted = models.BooleanField(default=False)

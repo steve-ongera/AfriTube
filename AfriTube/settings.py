@@ -26,7 +26,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'streamin_application',
 ]
+
+AUTH_USER_MODEL = 'streamin_application.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
