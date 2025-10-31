@@ -5,43 +5,51 @@
 
 {% block content %}
 <div class="youtube-container">
-    <!-- Main Content Area -->
     <div class="content-wrapper">
-        <!-- Live Streams Section -->
+        <!-- Live Streams Section with Horizontal Scroll -->
         {% if live_streams %}
-        <section class="content-section">
+        <section class="content-section live-section">
             <div class="section-header">
                 <h2 class="section-title">
-                    <svg class="live-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M14,12L14,12c0,1.1-0.9,2-2,2s-2-0.9-2-2s0.9-2,2-2S14,10.9,14,12z M8.48,8.45L7.77,7.75 C6.68,8.83,6,10.34,6,12s0.68,3.17,1.77,4.25l0.71-0.71C7.57,14.64,7,13.39,7,12S7.57,9.36,8.48,8.45z M16.23,7.75l-0.71,0.71 C16.43,9.36,17,10.61,17,12s-0.57,2.64-1.48,3.55l0.71,0.71C17.32,15.17,18,13.66,18,12S17.32,8.83,16.23,7.75z M5.65,5.63 L4.95,4.93C3.13,6.73,2,9.24,2,12s1.13,5.27,2.95,7.07l0.71-0.71C4.02,16.74,3,14.49,3,12S4.02,7.26,5.65,5.63z M19.05,4.93 l-0.71,0.71C19.98,7.26,21,9.51,21,12s-1.02,4.74-2.65,6.37l0.71,0.71C20.87,17.27,22,14.76,22,12S20.87,6.73,19.05,4.93z"/>
-                    </svg>
+                    <i class="bi bi-broadcast live-icon"></i>
                     Live
                 </h2>
-            </div>
-            <div class="video-grid live-grid">
-                {% for stream in live_streams %}
-                <div class="video-item">
-                    <a href="{% url 'stream_detail' stream.stream_id %}" class="video-link">
-                        <div class="thumbnail-wrapper">
-                            <img src="{{ stream.thumbnail.url }}" alt="{{ stream.title }}" class="thumbnail">
-                            <div class="live-badge">
-                                <span class="live-dot"></span>
-                                LIVE
-                            </div>
-                            <span class="viewer-badge">
-                                {{ stream.current_viewers|default:"0" }} watching
-                            </span>
-                        </div>
-                        <div class="video-metadata">
-                            <img src="{{ stream.creator.get_profile_picture_url }}" alt="{{ stream.creator.username }}" class="channel-avatar">
-                            <div class="video-info">
-                                <h3 class="video-title">{{ stream.title }}</h3>
-                                <p class="channel-name">{{ stream.creator.channel_name|default:stream.creator.username }}</p>
-                            </div>
-                        </div>
-                    </a>
+                <div class="scroll-controls">
+                    <button class="scroll-btn scroll-left" id="scrollLeft" disabled>
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="scroll-btn scroll-right" id="scrollRight">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
                 </div>
-                {% endfor %}
+            </div>
+            <div class="live-scroll-container" id="liveScrollContainer">
+                <div class="live-scroll-content">
+                    {% for stream in live_streams %}
+                    <div class="live-item">
+                        <a href="{% url 'stream_detail' stream.stream_id %}" class="video-link">
+                            <div class="thumbnail-wrapper live-thumbnail">
+                                <img src="{{ stream.thumbnail.url }}" alt="{{ stream.title }}" class="thumbnail">
+                                <div class="live-badge">
+                                    <span class="live-dot"></span>
+                                    LIVE
+                                </div>
+                                <span class="viewer-badge">
+                                    <i class="bi bi-eye-fill"></i>
+                                    {{ stream.current_viewers|default:"0" }}
+                                </span>
+                            </div>
+                            <div class="video-metadata">
+                                <img src="{{ stream.creator.get_profile_picture_url }}" alt="{{ stream.creator.username }}" class="channel-avatar">
+                                <div class="video-info">
+                                    <h3 class="video-title">{{ stream.title }}</h3>
+                                    <p class="channel-name">{{ stream.creator.channel_name|default:stream.creator.username }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </section>
         {% endif %}
@@ -51,9 +59,7 @@
         <section class="content-section">
             <div class="section-header">
                 <h2 class="section-title">
-                    <svg class="shorts-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M10 14.65v-5.3L15 12l-5 2.65zm7.77-4.33c-.77-.32-1.2-.5-1.2-.5L18 9.06c1.84-.96 2.53-3.23 1.56-5.06s-3.24-2.53-5.07-1.56L6 6.94c-1.29.68-2.07 2.04-2 3.49.07 1.42.93 2.67 2.22 3.25.03.01 1.2.5 1.2.5L6 14.93c-1.83.97-2.53 3.24-1.56 5.07.97 1.83 3.24 2.53 5.07 1.56l8.5-4.5c1.29-.68 2.06-2.04 1.99-3.49-.07-1.42-.94-2.68-2.23-3.25zm-.23 5.86l-8.5 4.5c-1.34.71-3.01.2-3.72-1.14-.71-1.34-.2-3.01 1.14-3.72l2.04-1.08v-1.21l-.69-.28-1.11-.46c-.99-.41-1.65-1.35-1.7-2.41-.05-1.06.52-2.06 1.46-2.56l8.5-4.5c1.34-.71 3.01-.2 3.72 1.14.71 1.34.2 3.01-1.14 3.72L15.5 9.26v1.21l1.8.74c.99.41 1.65 1.35 1.7 2.41.05 1.06-.52 2.06-1.46 2.56z"/>
-                    </svg>
+                    <i class="bi bi-play-btn shorts-icon"></i>
                     Shorts
                 </h2>
             </div>
@@ -63,7 +69,9 @@
                     <a href="{% url 'video_detail' short.video_id %}" class="short-link">
                         <div class="short-thumbnail">
                             <img src="{{ short.thumbnail.url }}" alt="{{ short.title }}" class="short-img">
-                            <div class="short-views-badge">{{ short.view_count|default:"0" }} views</div>
+                            <div class="short-views-badge">
+                                <i class="bi bi-eye"></i> {{ short.view_count|default:"0" }}
+                            </div>
                         </div>
                         <p class="short-title">{{ short.title|truncatechars:40 }}</p>
                     </a>
@@ -73,109 +81,33 @@
         </section>
         {% endif %}
 
-        <!-- Main Videos Section -->
+        <!-- Main Videos Section with Infinite Scroll -->
         <section class="content-section">
-            {% if recommended_videos or videos %}
-            <div class="video-grid">
-                {% for recommendation in recommended_videos %}
-                {% with video=recommendation.video %}
-                <div class="video-item">
-                    <a href="{% url 'video_detail' video.video_id %}" class="video-link">
-                        <div class="thumbnail-wrapper">
-                            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail">
-                            <span class="duration">{{ video.duration|date:"i:s" }}</span>
-                            {% if video.video_type == 'premium' %}
-                            <span class="badge-premium">Premium</span>
-                            {% elif video.video_type == 'pay_per_view' %}
-                            <span class="badge-ppv">${{ video.price }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="video-metadata">
-                            <img src="{{ video.creator.get_profile_picture_url }}" alt="{{ video.creator.username }}" class="channel-avatar">
-                            <div class="video-info">
-                                <h3 class="video-title">{{ video.title }}</h3>
-                                <p class="channel-name">
-                                    {{ video.creator.channel_name|default:video.creator.username }}
-                                    {% if video.creator.is_verified %}
-                                    <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M9.8,17.3l-4.2-4.1L7,11.8l2.8,2.7L17,7.4l1.4,1.4 L9.8,17.3z"/>
-                                    </svg>
-                                    {% endif %}
-                                </p>
-                                <p class="video-stats">
-                                    {{ video.view_count|default:"0" }} views • {{ video.published_at|timesince }} ago
-                                </p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                {% endwith %}
-                {% endfor %}
-
-                {% for video in videos %}
-                <div class="video-item">
-                    <a href="{% url 'video_detail' video.video_id %}" class="video-link">
-                        <div class="thumbnail-wrapper">
-                            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail">
-                            <span class="duration">{{ video.duration|date:"i:s" }}</span>
-                            {% if video.video_type == 'premium' %}
-                            <span class="badge-premium">Premium</span>
-                            {% elif video.video_type == 'pay_per_view' %}
-                            <span class="badge-ppv">${{ video.price }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="video-metadata">
-                            <img src="{{ video.creator.get_profile_picture_url }}" alt="{{ video.creator.username }}" class="channel-avatar">
-                            <div class="video-info">
-                                <h3 class="video-title">{{ video.title }}</h3>
-                                <p class="channel-name">
-                                    {{ video.creator.channel_name|default:video.creator.username }}
-                                    {% if video.creator.is_verified %}
-                                    <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M9.8,17.3l-4.2-4.1L7,11.8l2.8,2.7L17,7.4l1.4,1.4 L9.8,17.3z"/>
-                                    </svg>
-                                    {% endif %}
-                                </p>
-                                <p class="video-stats">
-                                    {{ video.view_count|default:"0" }} views • {{ video.published_at|timesince }} ago
-                                </p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
+            <div class="video-grid" id="videoGrid">
+                {% include 'partials/video_grid_items.html' %}
             </div>
-            {% else %}
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading more videos...</p>
+            </div>
+
+            <!-- No More Videos Message -->
+            <div class="no-more-videos" id="noMoreVideos" style="display: none;">
+                <i class="bi bi-check-circle"></i>
+                <p>You've reached the end</p>
+            </div>
+
+            <!-- Empty State -->
+            {% if not videos and not recommended_videos %}
             <div class="empty-state">
-                <svg class="empty-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                </svg>
+                <i class="bi bi-film empty-icon"></i>
                 <h3>No videos available</h3>
                 <p>Check back later for new content</p>
             </div>
             {% endif %}
         </section>
-
-        <!-- Pagination -->
-        {% if videos.has_other_pages %}
-        <nav class="pagination-nav">
-            {% if videos.has_previous %}
-            <a href="?page={{ videos.previous_page_number }}" class="pagination-btn">Previous</a>
-            {% endif %}
-            
-            {% for num in videos.paginator.page_range %}
-                {% if videos.number == num %}
-                <span class="page-number active">{{ num }}</span>
-                {% elif num > videos.number|add:'-3' and num < videos.number|add:'3' %}
-                <a href="?page={{ num }}" class="page-number">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-
-            {% if videos.has_next %}
-            <a href="?page={{ videos.next_page_number }}" class="pagination-btn">Next</a>
-            {% endif %}
-        </nav>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -203,6 +135,7 @@
     .section-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         margin-bottom: 16px;
         padding: 0 0 12px 0;
     }
@@ -219,9 +152,76 @@
 
     .live-icon,
     .shorts-icon {
-        width: 24px;
-        height: 24px;
+        font-size: 24px;
         color: #ff0000;
+    }
+
+    /* Live Streams Horizontal Scroll */
+    .live-section {
+        position: relative;
+    }
+
+    .scroll-controls {
+        display: flex;
+        gap: 8px;
+    }
+
+    .scroll-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .scroll-btn:hover:not(:disabled) {
+        background: #f2f2f2;
+        transform: scale(1.05);
+    }
+
+    .scroll-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .scroll-btn i {
+        font-size: 20px;
+        color: #606060;
+    }
+
+    .live-scroll-container {
+        position: relative;
+        overflow: hidden;
+        margin: 0 -8px;
+    }
+
+    .live-scroll-content {
+        display: flex;
+        gap: 16px;
+        padding: 0 8px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .live-scroll-content::-webkit-scrollbar {
+        display: none;
+    }
+
+    .live-item {
+        flex: 0 0 380px;
+        max-width: 380px;
+    }
+
+    .live-thumbnail {
+        aspect-ratio: 16/9;
     }
 
     /* Video Grid */
@@ -229,10 +229,6 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 24px 16px;
-    }
-
-    .live-grid {
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     }
 
     .video-item {
@@ -264,6 +260,28 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
+    }
+
+    /* Video Preview on Hover */
+    .video-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+
+    .video-item:hover .video-preview {
+        opacity: 1;
+    }
+
+    .video-item:hover .thumbnail {
+        opacity: 0;
     }
 
     .duration {
@@ -277,6 +295,7 @@
         font-size: 12px;
         font-weight: 500;
         font-family: 'Roboto', sans-serif;
+        z-index: 2;
     }
 
     .live-badge {
@@ -285,8 +304,8 @@
         left: 8px;
         background: #cc0000;
         color: white;
-        padding: 2px 8px;
-        border-radius: 3px;
+        padding: 4px 8px;
+        border-radius: 4px;
         font-size: 12px;
         font-weight: 600;
         display: flex;
@@ -294,6 +313,7 @@
         gap: 6px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        z-index: 2;
     }
 
     .live-dot {
@@ -310,22 +330,30 @@
         left: 6px;
         background: rgba(0, 0, 0, 0.85);
         color: white;
-        padding: 3px 8px;
+        padding: 4px 8px;
         border-radius: 4px;
         font-size: 12px;
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
     }
 
     .badge-premium {
         position: absolute;
         top: 8px;
         left: 8px;
-        background: #ffd700;
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
         color: #000;
         padding: 4px 8px;
         border-radius: 4px;
         font-size: 11px;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
     }
 
     .badge-ppv {
@@ -338,6 +366,10 @@
         border-radius: 4px;
         font-size: 11px;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
     }
 
     .video-metadata {
@@ -379,9 +411,8 @@
         gap: 4px;
     }
 
-    .verified-icon {
-        width: 14px;
-        height: 14px;
+    .channel-name i {
+        font-size: 14px;
         color: #606060;
     }
 
@@ -437,6 +468,9 @@
         font-size: 12px;
         font-weight: 500;
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .short-title {
@@ -451,6 +485,50 @@
         overflow: hidden;
     }
 
+    /* Loading Spinner */
+    .loading-spinner {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #065fd4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-spinner p {
+        color: #606060;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .no-more-videos {
+        text-align: center;
+        padding: 40px 20px;
+        color: #606060;
+    }
+
+    .no-more-videos i {
+        font-size: 48px;
+        color: #065fd4;
+        margin-bottom: 12px;
+    }
+
+    .no-more-videos p {
+        font-size: 14px;
+        margin: 0;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -458,10 +536,9 @@
     }
 
     .empty-icon {
-        width: 120px;
-        height: 120px;
+        font-size: 120px;
         color: #909090;
-        margin: 0 auto 24px;
+        margin-bottom: 24px;
     }
 
     .empty-state h3 {
@@ -475,52 +552,6 @@
         font-size: 14px;
         color: #606060;
         margin: 0;
-    }
-
-    /* Pagination */
-    .pagination-nav {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-top: 32px;
-    }
-
-    .pagination-btn,
-    .page-number {
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-
-    .pagination-btn {
-        background: transparent;
-        color: #065fd4;
-        border: 1px solid #e5e5e5;
-    }
-
-    .pagination-btn:hover {
-        background: #f2f2f2;
-    }
-
-    .page-number {
-        background: transparent;
-        color: #606060;
-        min-width: 40px;
-        text-align: center;
-    }
-
-    .page-number.active {
-        background: #065fd4;
-        color: white;
-    }
-
-    .page-number:not(.active):hover {
-        background: #f2f2f2;
-        color: #030303;
     }
 
     /* Animation */
@@ -539,8 +570,9 @@
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         }
         
-        .live-grid {
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        .live-item {
+            flex: 0 0 320px;
+            max-width: 320px;
         }
     }
 
@@ -554,12 +586,21 @@
             gap: 16px 12px;
         }
 
-        .live-grid {
-            grid-template-columns: 1fr;
+        .live-item {
+            flex: 0 0 280px;
+            max-width: 280px;
         }
 
         .shorts-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
+
+        .scroll-controls {
+            display: none;
+        }
+
+        .live-scroll-content {
+            overflow-x: scroll;
         }
     }
 
@@ -590,6 +631,149 @@
             width: 32px;
             height: 32px;
         }
+
+        .live-item {
+            flex: 0 0 260px;
+            max-width: 260px;
+        }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Infinite Scroll
+    let loading = false;
+    let hasMore = {{ has_more|yesno:"true,false" }};
+    let nextPage = {{ next_page }};
+    const videoGrid = document.getElementById('videoGrid');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const noMoreVideos = document.getElementById('noMoreVideos');
+
+    function loadMoreVideos() {
+        if (loading || !hasMore) return;
+
+        loading = true;
+        loadingSpinner.style.display = 'block';
+
+        fetch(`?page=${nextPage}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingSpinner.style.display = 'none';
+            
+            if (data.html) {
+                videoGrid.insertAdjacentHTML('beforeend', data.html);
+                initVideoPreview(); // Re-initialize preview for new videos
+            }
+            
+            hasMore = data.has_more;
+            nextPage = data.next_page;
+            loading = false;
+
+            if (!hasMore) {
+                noMoreVideos.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading videos:', error);
+            loadingSpinner.style.display = 'none';
+            loading = false;
+        });
+    }
+
+    // Detect scroll near bottom
+    window.addEventListener('scroll', () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            loadMoreVideos();
+        }
+    });
+
+    // Video Preview on Hover
+    function initVideoPreview() {
+        const videoItems = document.querySelectorAll('.video-item');
+        
+        videoItems.forEach(item => {
+            const preview = item.querySelector('.video-preview');
+            if (!preview) return;
+
+            let hoverTimeout;
+
+            item.addEventListener('mouseenter', () => {
+                hoverTimeout = setTimeout(() => {
+                    preview.play().catch(e => console.log('Preview play failed:', e));
+                }, 500); // Wait 500ms before playing
+            });
+
+            item.addEventListener('mouseleave', () => {
+                clearTimeout(hoverTimeout);
+                preview.pause();
+                preview.currentTime = 0;
+            });
+        });
+    }
+
+    initVideoPreview();
+
+    // Live Streams Horizontal Scroll
+    const liveScrollContainer = document.getElementById('liveScrollContainer');
+    const scrollLeft = document.getElementById('scrollLeft');
+    const scrollRight = document.getElementById('scrollRight');
+
+    if (liveScrollContainer && scrollLeft && scrollRight) {
+        const scrollContent = liveScrollContainer.querySelector('.live-scroll-content');
+
+        function updateScrollButtons() {
+            const scrollLeft_val = scrollContent.scrollLeft;
+            const scrollWidth = scrollContent.scrollWidth;
+            const clientWidth = scrollContent.clientWidth;
+
+            scrollLeft.disabled = scrollLeft_val <= 0;
+            scrollRight.disabled = scrollLeft_val + clientWidth >= scrollWidth - 1;
+        }
+
+        scrollLeft.addEventListener('click', () => {
+            scrollContent.scrollBy({ left: -400, behavior: 'smooth' });
+        });
+
+        scrollRight.addEventListener('click', () => {
+            scrollContent.scrollBy({ left: 400, behavior: 'smooth' });
+        });
+
+        scrollContent.addEventListener('scroll', updateScrollButtons);
+        updateScrollButtons();
+
+        // Touch scroll for mobile
+        let isDown = false;
+        let startX;
+        let scrollLeftPos;
+
+        scrollContent.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - scrollContent.offsetLeft;
+            scrollLeftPos = scrollContent.scrollLeft;
+        });
+
+        scrollContent.addEventListener('mouseleave', () => {
+            isDown = false;
+        });
+
+        scrollContent.addEventListener('mouseup', () => {
+            isDown = false;
+        });
+
+        scrollContent.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - scrollContent.offsetLeft;
+            const walk = (x - startX) * 2;
+            scrollContent.scrollLeft = scrollLeftPos - walk;
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -10,16 +10,20 @@ from django.core.paginator import Paginator
 from datetime import timedelta
 from .models import *
 
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 def index(request):
     """
     Homepage view - Display videos with recommendations
-    Similar to YouTube homepage
+    Similar to YouTube homepage with infinite scroll
     """
     # Get filter parameters
     category_slug = request.GET.get('category')
     search_query = request.GET.get('q')
-    sort_by = request.GET.get('sort', 'trending')  # trending, latest, popular
+    sort_by = request.GET.get('sort', 'trending')
+    page = int(request.GET.get('page', 1))
+    per_page = 12  # Load 12 videos at a time
     
     # Base queryset - only published videos
     videos = Video.objects.filter(
@@ -43,7 +47,6 @@ def index(request):
     
     # Sorting
     if sort_by == 'trending':
-        # Trending: Recent videos with high engagement
         week_ago = timezone.now() - timedelta(days=7)
         videos = videos.filter(published_at__gte=week_ago).order_by(
             '-view_count', '-like_count', '-published_at'
@@ -53,45 +56,56 @@ def index(request):
     elif sort_by == 'popular':
         videos = videos.order_by('-view_count', '-like_count')
     else:
-        # Default: Mixed algorithm
         videos = videos.order_by('-published_at')
     
     # Get user-specific recommendations if logged in
+    recommended_videos = []
     if request.user.is_authenticated:
         recommended_videos_qs = VideoRecommendation.objects.filter(
             user=request.user,
             is_shown=False
         ).select_related('video__creator', 'video__category').order_by('-score')[:10]
         
-        # Extract IDs
         recommended_ids = [rec.pk for rec in recommended_videos_qs]
         
-        # Update using filter
-        VideoRecommendation.objects.filter(pk__in=recommended_ids).update(
-            is_shown=True,
-            shown_at=timezone.now()
-        )
+        if recommended_ids:
+            VideoRecommendation.objects.filter(pk__in=recommended_ids).update(
+                is_shown=True,
+                shown_at=timezone.now()
+            )
         
-        recommended_videos = recommended_videos_qs  # pass to template
-
+        recommended_videos = recommended_videos_qs
     
-    # Pagination
-    paginator = Paginator(videos, 24)  # 24 videos per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Pagination for infinite scroll
+    start = (page - 1) * per_page
+    end = start + per_page
+    videos_page = videos[start:end]
+    has_more = videos.count() > end
+    
+    # AJAX request for infinite scroll
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_to_string('partials/video_grid_items.html', {
+            'videos': videos_page,
+            'recommended_videos': recommended_videos if page == 1 else []
+        })
+        return JsonResponse({
+            'html': html,
+            'has_more': has_more,
+            'next_page': page + 1
+        })
     
     # Get all categories for filter
     categories = Category.objects.filter(is_active=True).order_by('display_order')
     
-    # Get live streams
+    # Get live streams - randomize on each refresh
     live_streams = LiveStream.objects.filter(
         status='live'
-    ).select_related('creator', 'category').order_by('-current_viewers')[:5]
+    ).select_related('creator', 'category').order_by('?')[:10]  # Random order
     
-    # Get trending tags
+    # Trending tags
     trending_tags = Tag.objects.order_by('-usage_count')[:10]
     
-    # Shorts (if you have short videos)
+    # Shorts
     shorts = Video.objects.filter(
         status='published',
         duration__lte=timedelta(seconds=60)
@@ -105,7 +119,7 @@ def index(request):
         ).select_related('following')[:10]
     
     context = {
-        'videos': page_obj,
+        'videos': videos_page,
         'recommended_videos': recommended_videos,
         'categories': categories,
         'live_streams': live_streams,
@@ -115,6 +129,8 @@ def index(request):
         'active_category': category_slug,
         'search_query': search_query,
         'sort_by': sort_by,
+        'has_more': has_more,
+        'next_page': 2
     }
     
     return render(request, 'index.html', context)

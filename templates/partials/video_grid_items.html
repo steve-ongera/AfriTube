@@ -1,0 +1,71 @@
+{% for recommendation in recommended_videos %}
+{% with video=recommendation.video %}
+<div class="video-item" data-video-id="{{ video.video_id }}">
+    <a href="{% url 'video_detail' video.video_id %}" class="video-link">
+        <div class="thumbnail-wrapper">
+            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail">
+            <video class="video-preview" muted loop preload="none">
+                {% if video.preview_gif %}
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+                {% endif %}
+            </video>
+            <span class="duration">{{ video.duration|date:"i:s" }}</span>
+            {% if video.video_type == 'premium' %}
+            <span class="badge-premium"><i class="bi bi-star-fill"></i> Premium</span>
+            {% elif video.video_type == 'pay_per_view' %}
+            <span class="badge-ppv"><i class="bi bi-lock-fill"></i> ${{ video.price }}</span>
+            {% endif %}
+        </div>
+        <div class="video-metadata">
+            <img src="{{ video.creator.get_profile_picture_url }}" alt="{{ video.creator.username }}" class="channel-avatar">
+            <div class="video-info">
+                <h3 class="video-title">{{ video.title }}</h3>
+                <p class="channel-name">
+                    {{ video.creator.channel_name|default:video.creator.username }}
+                    {% if video.creator.is_verified %}
+                    <i class="bi bi-patch-check-fill"></i>
+                    {% endif %}
+                </p>
+                <p class="video-stats">
+                    {{ video.view_count|default:"0" }} views • {{ video.published_at|timesince }} ago
+                </p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endwith %}
+{% endfor %}
+
+{% for video in videos %}
+<div class="video-item" data-video-id="{{ video.video_id }}">
+    <a href="{% url 'video_detail' video.video_id %}" class="video-link">
+        <div class="thumbnail-wrapper">
+            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="thumbnail">
+            <video class="video-preview" muted loop preload="none">
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+            </video>
+            <span class="duration">{{ video.duration|date:"i:s" }}</span>
+            {% if video.video_type == 'premium' %}
+            <span class="badge-premium"><i class="bi bi-star-fill"></i> Premium</span>
+            {% elif video.video_type == 'pay_per_view' %}
+            <span class="badge-ppv"><i class="bi bi-lock-fill"></i> ${{ video.price }}</span>
+            {% endif %}
+        </div>
+        <div class="video-metadata">
+            <img src="{{ video.creator.get_profile_picture_url }}" alt="{{ video.creator.username }}" class="channel-avatar">
+            <div class="video-info">
+                <h3 class="video-title">{{ video.title }}</h3>
+                <p class="channel-name">
+                    {{ video.creator.channel_name|default:video.creator.username }}
+                    {% if video.creator.is_verified %}
+                    <i class="bi bi-patch-check-fill"></i>
+                    {% endif %}
+                </p>
+                <p class="video-stats">
+                    {{ video.view_count|default:"0" }} views • {{ video.published_at|timesince }} ago
+                </p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endfor %}
