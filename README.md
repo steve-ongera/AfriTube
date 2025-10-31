@@ -257,6 +257,7 @@ afritube/
 ```
 
 ## 🔧 Configuration
+Primary: Orange (#FF6B35) and Yellow (#F7931E) gradients
 
 ### Video Processing Settings
 

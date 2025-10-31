@@ -1388,7 +1388,7 @@ def register_view(request):
 def logout_view(request):
     from django.contrib.auth import logout
     logout(request)
-    return redirect('home')
+    return redirect('index')
 
 def help_center(request):
     return render(request, 'help.html')
@@ -1418,3 +1418,329 @@ def api_subscribe(request, creator_id):
             return JsonResponse({'success': True, 'subscribed': False})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+# accounts/views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.conf import settings
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from .models import User
+import json
+
+# Google OAuth
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
+
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def register_view(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('index')
+    
+    if request.method == 'POST':
+        # Get form data
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        user_type = request.POST.get('user_type', 'viewer')
+        phone_number = request.POST.get('phone_number', '').strip()
+        country = request.POST.get('country', '').strip()
+        
+        # Validation
+        errors = []
+        
+        if not username or len(username) < 3:
+            errors.append('Username must be at least 3 characters long.')
+        
+        if User.objects.filter(username=username).exists():
+            errors.append('Username already exists.')
+        
+        if not email:
+            errors.append('Email is required.')
+        
+        if User.objects.filter(email=email).exists():
+            errors.append('Email already registered.')
+        
+        if len(password) < 8:
+            errors.append('Password must be at least 8 characters long.')
+        
+        if password != confirm_password:
+            errors.append('Passwords do not match.')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'accounts/register.html', {
+                'username': username,
+                'email': email,
+                'phone_number': phone_number,
+                'country': country,
+                'user_type': user_type
+            })
+        
+        # Create user
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                user_type=user_type,
+                phone_number=phone_number if phone_number else None,
+                country=country
+            )
+            
+            # Set creator status if selected
+            if user_type == 'creator':
+                user.is_creator = True
+                user.channel_name = username  # Default channel name
+                user.save()
+            
+            # Log the user in
+            login(request, user)
+            
+            messages.success(request, f'Welcome {username}! Your account has been created successfully.')
+            return redirect('index')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating account: {str(e)}')
+            return render(request, 'accounts/register.html')
+    
+    return render(request, 'accounts/register.html')
+
+
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def login_view(request):
+    """User login view"""
+    if request.user.is_authenticated:
+        return redirect('index')
+    
+    if request.method == 'POST':
+        username_or_email = request.POST.get('username_or_email', '').strip()
+        password = request.POST.get('password', '')
+        remember_me = request.POST.get('remember_me', False)
+        
+        if not username_or_email or not password:
+            messages.error(request, 'Please provide both username/email and password.')
+            return render(request, 'accounts/login.html', {'username_or_email': username_or_email})
+        
+        # Try to authenticate with username first, then email
+        user = authenticate(request, username=username_or_email, password=password)
+        
+        if user is None:
+            # Try with email
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                pass
+        
+        if user is not None:
+            login(request, user)
+            
+            # Handle remember me
+            if not remember_me:
+                request.session.set_expiry(0)  # Session expires on browser close
+            
+            messages.success(request, f'Welcome back, {user.username}!')
+            
+            # Redirect to next page or home
+            next_page = request.GET.get('next', 'index')
+            return redirect(next_page)
+        else:
+            messages.error(request, 'Invalid username/email or password.')
+            return render(request, 'accounts/login.html', {'username_or_email': username_or_email})
+    
+    return render(request, 'accounts/login.html')
+
+
+@require_http_methods(["POST"])
+def google_auth(request):
+    """Handle Google OAuth authentication"""
+    try:
+        data = json.loads(request.body)
+        token = data.get('credential')
+        
+        if not token:
+            return JsonResponse({'error': 'No credential provided'}, status=400)
+        
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(
+            token, 
+            google_requests.Request(), 
+            settings.GOOGLE_OAUTH_CLIENT_ID
+        )
+        
+        # Get user info
+        google_id = idinfo['sub']
+        email = idinfo['email']
+        name = idinfo.get('name', '')
+        picture = idinfo.get('picture', '')
+        
+        # Check if user exists
+        try:
+            user = User.objects.get(google_id=google_id)
+        except User.DoesNotExist:
+            try:
+                # Check if email already exists
+                user = User.objects.get(email=email)
+                user.google_id = google_id
+                if not user.profile_picture and picture:
+                    # Save picture URL or download it
+                    pass
+                user.save()
+            except User.DoesNotExist:
+                # Create new user
+                username = email.split('@')[0]
+                # Ensure unique username
+                base_username = username
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    google_id=google_id,
+                    first_name=name.split()[0] if name else '',
+                    last_name=' '.join(name.split()[1:]) if len(name.split()) > 1 else ''
+                )
+        
+        # Log the user in
+        login(request, user)
+        
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('index')
+        })
+        
+    except ValueError as e:
+        return JsonResponse({'error': 'Invalid token'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def forgot_password_view(request):
+    """Forgot password - send reset email"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        
+        if not email:
+            messages.error(request, 'Please enter your email address.')
+            return render(request, 'accounts/forgot_password.html')
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate reset token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Create reset URL
+            reset_url = request.build_absolute_uri(
+                reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+            )
+            
+            # Send email
+            subject = 'Password Reset Request'
+            message = render_to_string('accounts/password_reset_email.html', {
+                'user': user,
+                'reset_url': reset_url,
+                'site_name': 'AfriTube'
+            })
+            
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+                html_message=message
+            )
+            
+            messages.success(request, 'Password reset instructions have been sent to your email.')
+            return redirect('login')
+            
+        except User.DoesNotExist:
+            # Don't reveal that the email doesn't exist
+            messages.success(request, 'If an account exists with that email, password reset instructions have been sent.')
+            return redirect('login')
+        except Exception as e:
+            messages.error(request, 'Error sending reset email. Please try again later.')
+            return render(request, 'accounts/forgot_password.html', {'email': email})
+    
+    return render(request, 'accounts/forgot_password.html')
+
+
+@csrf_protect
+@require_http_methods(["GET", "POST"])
+def password_reset_confirm_view(request, uidb64, token):
+    """Confirm password reset with token"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            password = request.POST.get('password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+            
+            if len(password) < 8:
+                messages.error(request, 'Password must be at least 8 characters long.')
+                return render(request, 'accounts/password_reset_confirm.html', {
+                    'validlink': True,
+                    'uidb64': uidb64,
+                    'token': token
+                })
+            
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match.')
+                return render(request, 'accounts/password_reset_confirm.html', {
+                    'validlink': True,
+                    'uidb64': uidb64,
+                    'token': token
+                })
+            
+            # Set new password
+            user.set_password(password)
+            user.save()
+            
+            messages.success(request, 'Your password has been reset successfully. You can now log in.')
+            return redirect('login')
+        
+        return render(request, 'accounts/password_reset_confirm.html', {
+            'validlink': True,
+            'uidb64': uidb64,
+            'token': token
+        })
+    else:
+        messages.error(request, 'The password reset link is invalid or has expired.')
+        return redirect('forgot_password')
+
+
+@login_required
+def logout_view(request):
+    """User logout"""
+    username = request.user.username
+    logout(request)
+    messages.success(request, f'Goodbye {username}! You have been logged out successfully.')
+    return redirect('login')

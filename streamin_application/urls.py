@@ -44,4 +44,16 @@ urlpatterns = [
     path('channel/<str:username>/about/', views.channel_about, name='channel_about'),
     path('channel/<str:username>/edit/', views.channel_edit, name='channel_edit'),
     path('channel/<str:username>/follow/', views.follow_channel, name='follow_channel'),
+
+    # Authentication
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+    
+    # Password Reset
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('reset-password/<uidb64>/<token>/', views.password_reset_confirm_view, name='password_reset_confirm'),
+    
+    # Google OAuth
+    path('google-auth/', views.google_auth, name='google_auth'),
 ]
