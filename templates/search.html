@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ query }} - Search Results | {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-results-header {
+        padding: 24px 0;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 24px;
+    }
+
+    .search-query {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .search-meta {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 24px;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 24px;
+        overflow-x: auto;
+    }
+
+    .filter-tab {
+        padding: 12px 0;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        white-space: nowrap;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .filter-tab:hover {
+        color: var(--text-primary);
+    }
+
+    .filter-tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+    }
+
+    /* Video Card */
+    .video-card {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .video-card:hover .video-thumbnail img {
+        transform: scale(1.05);
+    }
+
+    .video-thumbnail {
+        position: relative;
+        width: 360px;
+        height: 202px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #f0f0f0;
+    }
+
+    .video-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .video-duration {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .video-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .video-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .video-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .video-meta span::after {
+        content: "•";
+        margin-left: 8px;
+    }
+
+    .video-meta span:last-child::after {
+        content: "";
+        margin-left: 0;
+    }
+
+    .video-creator {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .creator-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+    }
+
+    .creator-name {
+        color: var(--text-secondary);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .creator-name:hover {
+        color: var(--text-primary);
+    }
+
+    .video-description {
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .premium-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    /* Creator Card */
+    .creator-card {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 24px;
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+    }
+
+    .creator-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .creator-card-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+    }
+
+    .creator-card-info {
+        flex: 1;
+    }
+
+    .creator-card-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .creator-card-stats {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .creator-card-bio {
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .subscribe-btn {
+        padding: 10px 24px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .subscribe-btn:hover {
+        background: var(--primary-hover);
+    }
+
+    .subscribe-btn.subscribed {
+        background: #f0f0f0;
+        color: var(--text-primary);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .video-card {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 200px;
+        }
+
+        .video-title {
+            font-size: 16px;
+        }
+
+        .creator-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .search-query {
+            font-size: 20px;
+        }
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .no-results i {
+        font-size: 64px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+
+    .no-results h3 {
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+
+    .no-results p {
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-results-container">
+    {% if query %}
+        <div class="search-results-header">
+            <h1 class="search-query">Results for "{{ query }}"</h1>
+            <p class="search-meta">
+                {% if videos %}
+                    About {{ videos.paginator.count }} result{{ videos.paginator.count|pluralize }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="filter-tabs">
+            <a href="?q={{ query }}&type=all" class="filter-tab {% if filter_type == 'all' %}active{% endif %}">
+                <i class="bi bi-grid-3x3-gap me-1"></i> All
+            </a>
+            <a href="?q={{ query }}&type=video" class="filter-tab {% if filter_type == 'video' %}active{% endif %}">
+                <i class="bi bi-play-circle me-1"></i> Videos
+            </a>
+            <a href="?q={{ query }}&type=creator" class="filter-tab {% if filter_type == 'creator' %}active{% endif %}">
+                <i class="bi bi-person-circle me-1"></i> Creators
+            </a>
+            <a href="?q={{ query }}&type=playlist" class="filter-tab {% if filter_type == 'playlist' %}active{% endif %}">
+                <i class="bi bi-collection-play me-1"></i> Playlists
+            </a>
+        </div>
+
+        <!-- Creators Section -->
+        {% if creators %}
+            <div class="creators-section mb-4">
+                <h2 class="h5 mb-3">Creators</h2>
+                {% for creator in creators %}
+                    <div class="creator-card">
+                        <img src="{{ creator.get_profile_picture_url }}" alt="{{ creator.channel_name }}" class="creator-card-avatar">
+                        <div class="creator-card-info">
+                            <div class="creator-card-name">
+                                {{ creator.channel_name|default:creator.username }}
+                                {% if creator.is_verified %}
+                                    <i class="bi bi-patch-check-fill text-primary"></i>
+                                {% endif %}
+                            </div>
+                            <div class="creator-card-stats">
+                                {{ creator.total_followers|default:0 }} subscriber{{ creator.total_followers|pluralize }}
+                                • {{ creator.videos.count }} video{{ creator.videos.count|pluralize }}
+                            </div>
+                            {% if creator.bio %}
+                                <p class="creator-card-bio">{{ creator.bio|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                        <button class="subscribe-btn">Subscribe</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Videos Section -->
+        {% if videos %}
+            <div class="videos-section">
+                <h2 class="h5 mb-3">Videos</h2>
+                {% for video in videos %}
+                    <a href="/watch/{{ video.video_id }}/" class="video-card text-decoration-none">
+                        <div class="video-thumbnail">
+                            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" loading="lazy">
+                            <span class="video-duration">{{ video.duration }}</span>
+                            {% if video.video_type != 'free' %}
+                                <span class="premium-badge" style="position: absolute; top: 8px; left: 8px;">
+                                    Premium
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">{{ video.title }}</h3>
+                            <div class="video-creator">
+                                <img src="{{ video.creator.get_profile_picture_url }}" alt="{{ video.creator.username }}" class="creator-avatar">
+                                <a href="/creator/{{ video.creator.username }}/" class="creator-name text-decoration-none">
+                                    {{ video.creator.channel_name|default:video.creator.username }}
+                                    {% if video.creator.is_verified %}
+                                        <i class="bi bi-patch-check-fill text-primary"></i>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            <div class="video-meta">
+                                <span>{{ video.view_count|default:0 }} view{{ video.view_count|pluralize }}</span>
+                                <span>{{ video.published_at|timesince }} ago</span>
+                            </div>
+                            <p class="video-description">{{ video.description|truncatewords:30 }}</p>
+                        </div>
+                    </a>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if videos.has_other_pages %}
+                    <nav aria-label="Search results pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if videos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?q={{ query }}&type={{ filter_type }}&page={{ videos.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in videos.paginator.page_range %}
+                                {% if videos.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > videos.number|add:'-3' and num < videos.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ query }}&type={{ filter_type }}&page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if videos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?q={{ query }}&type={{ filter_type }}&page={{ videos.next_page_number }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Playlists Section -->
+        {% if playlists %}
+            <div class="playlists-section mt-4">
+                <h2 class="h5 mb-3">Playlists</h2>
+                {% for playlist in playlists %}
+                    <div class="playlist-card mb-3">
+                        <!-- Playlist content here -->
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- No Results -->
+        {% if not videos and not creators and not playlists %}
+            <div class="no-results">
+                <i class="bi bi-search"></i>
+                <h3>No results found</h3>
+                <p>Try different keywords or check your spelling</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-results">
+            <i class="bi bi-search"></i>
+            <h3>Search {{ site_name }}</h3>
+            <p>Enter keywords to find videos, creators, and more</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Subscribe button functionality
+    document.querySelectorAll('.subscribe-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isSubscribed = this.classList.contains('subscribed');
+            
+            if (isSubscribed) {
+                this.classList.remove('subscribed');
+                this.textContent = 'Subscribe';
+            } else {
+                this.classList.add('subscribed');
+                this.textContent = 'Subscribed';
+            }
+            
+            // Here you would make an AJAX call to your backend
+            // to actually subscribe/unsubscribe
+        });
+    });
+</script>
+{% endblock %}

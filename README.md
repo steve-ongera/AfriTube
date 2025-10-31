@@ -1,4 +1,4 @@
-# 🎥 AfriTube - African Video Streaming & Monetization Platform
+#  AfriTube - African Video Streaming & Monetization Platform
 
 [![Django](https://img.shields.io/badge/Django-4.2+-green.svg)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
@@ -7,9 +7,9 @@
 
 > **AfriTube** (EarnStream) is a next-generation video streaming platform designed for African creators to share content, engage audiences, and earn money through multiple monetization channels.
 
-## 🌟 Features
+##  Features
 
-### 🎬 Content Creation & Management
+###  Content Creation & Management
 - **Free & Premium Videos** - Upload public or paid content
 - **Live Streaming** - Go live with real-time chat and reactions
 - **Video Calls** - One-to-one premium video sessions with fans
@@ -17,7 +17,7 @@
 - **Categories & Tags** - Organize content for easy discovery
 - **Playlists** - Create and manage video collections
 
-### 💰 Monetization System
+###  Monetization System
 - **Pay-Per-View** - Charge for premium content
 - **Creator Subscriptions** - Monthly subscriber revenue
 - **Ad Revenue** - Earn from video views (CPM model)
@@ -25,7 +25,7 @@
 - **Video Call Bookings** - Premium one-on-one sessions
 - **Multiple Payouts** - M-Pesa, PayPal, Bank Transfer
 
-### 👥 Social Features
+###  Social Features
 - **Follow System** - Build audience connections
 - **Comments & Replies** - Threaded discussions
 - **Direct Messaging** - DM between followers
@@ -33,27 +33,27 @@
 - **Like/Dislike** - Video engagement
 - **Share & Download** - Content distribution (when enabled)
 
-### 📊 Analytics & Insights
+###  Analytics & Insights
 - **Creator Dashboard** - Track views, earnings, audience growth
 - **Video Analytics** - Performance metrics per video
 - **Traffic Sources** - See where viewers come from
 - **Engagement Metrics** - Likes, comments, watch time
 - **Revenue Reports** - Detailed earnings breakdown
 
-### 🔐 Security & Moderation
+###  Security & Moderation
 - **Content Reporting** - Flag inappropriate content
 - **User Verification** - Verified creator badges
 - **Download Protection** - Secure, tokenized downloads
 - **Age Restrictions** - Content rating system
 - **Privacy Controls** - Public/Unlisted/Private videos
 
-### 🎯 Smart Recommendations
+###  Smart Recommendations
 - **AI-Powered Discovery** - Personalized video suggestions
 - **Trending Algorithm** - Surface popular content
 - **Category Preferences** - Customized content feeds
 - **Watch History** - Resume where you left off
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Django 4.2+** - Python web framework
@@ -81,7 +81,7 @@
 - **Django Allauth** - Social auth (Google, Facebook)
 - **JWT** - API authentication
 
-## 📋 Prerequisites
+##  Prerequisites
 
 Before you begin, ensure you have:
 
@@ -93,8 +93,8 @@ Before you begin, ensure you have:
 - AWS/GCP account (for storage)
 - M-Pesa Developer Account
 - Stripe Account
-
-## 🚀 Installation
+ 
+## Installation
 
 ### 1. Clone the Repository
 
@@ -219,7 +219,7 @@ redis-server
 
 Visit: `http://localhost:8000`
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 afritube/
@@ -256,8 +256,7 @@ afritube/
 └── docker-compose.yml
 ```
 
-## 🔧 Configuration
-Primary: Orange (#FF6B35) and Yellow (#F7931E) gradients
+##  Configuration
 
 ### Video Processing Settings
 
@@ -285,7 +284,7 @@ PLATFORM_FEE_PERCENTAGE = 20  # 20%
 MIN_PAYOUT_AMOUNT = Decimal('50.00')
 ```
 
-## 🎯 Usage Examples
+##  Usage Examples
 
 ### Upload Video (API)
 
@@ -347,7 +346,7 @@ result = mpesa.stk_push(
 )
 ```
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Run all tests
@@ -362,7 +361,7 @@ coverage report
 coverage html  # Open htmlcov/index.html
 ```
 
-## 🚢 Deployment
+##  Deployment
 
 ### Using Docker
 
@@ -401,7 +400,7 @@ docker-compose exec web python manage.py createsuperuser
 - **CDN**: CloudFlare, AWS CloudFront
 - **Video**: CloudFlare Stream, Mux, AWS MediaConvert
 
-## 📊 Performance Optimization
+##  Performance Optimization
 
 ### Database Optimization
 
@@ -433,7 +432,7 @@ def get_video(video_id):
     return video
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -450,7 +449,7 @@ We welcome contributions! Please follow these steps:
 - Add unit tests for new features
 - Update documentation
 
-## 📝 API Documentation
+##  API Documentation
 
 API documentation is available at:
 - **Swagger UI**: `http://localhost:8000/api/docs/`
@@ -495,7 +494,7 @@ GET    /api/users/{username}/videos/
 GET    /api/users/{username}/analytics/
 ```
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -520,24 +519,24 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440000  # 2.5GB
 # Check CloudFlare/Mux settings
 ```
 
-## 📜 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
 - **Documentation**: [https://docs.afritube.com](https://docs.afritube.com)
-- **Email**: support@afritube.com
+- **Email**: steveongera001@gmail.com
 - **Discord**: [Join our community](https://discord.gg/afritube)
 - **Twitter**: [@AfriTube](https://twitter.com/afritube)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Safaricom Daraja API for M-Pesa integration
 - Django community for the amazing framework
 - All contributors and supporters
 
-## 🗺️ Roadmap
+##  Roadmap
 
 ### Phase 1 - MVP (Q1 2025)
 - [x] User authentication & profiles
@@ -566,6 +565,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for African Creators**
+**Made with Love By Steve Ongera for African Creators**
 
 *Star ⭐ this repo if you find it useful!*
