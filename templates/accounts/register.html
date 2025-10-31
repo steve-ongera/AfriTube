@@ -20,7 +20,7 @@
         
         body {
             font-family: 'Roboto', Arial, sans-serif;
-            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            background-color: #ffffff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -30,14 +30,13 @@
         
         .auth-container {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             width: 100%;
             max-width: 500px;
-            padding: 48px 40px;
+            padding: 32px 28px;
+            border: 1px solid #e0e0e0;
             animation: slideUp 0.4s ease-out;
-            max-height: 90vh;
-            overflow-y: auto;
         }
         
         @keyframes slideUp {
@@ -53,45 +52,44 @@
         
         .logo-section {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         
         .logo {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-            border-radius: 20px;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            margin-bottom: 12px;
         }
         
         .logo i {
-            font-size: 40px;
+            font-size: 28px;
             color: white;
         }
         
         .logo-section h1 {
-            font-size: 28px;
+            font-size: 22px;
             color: #1a1a1a;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
         
         .logo-section p {
             color: #666;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #333;
             font-size: 14px;
             font-weight: 500;
@@ -103,26 +101,28 @@
         
         .input-wrapper i {
             position: absolute;
-            left: 16px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
             color: #999;
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .form-control {
             width: 100%;
-            padding: 14px 16px 14px 48px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.3s ease;
+            padding: 10px 14px 10px 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
             outline: none;
+            background-color: #fafafa;
         }
         
         .form-control:focus {
             border-color: #FF6B35;
-            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.1);
         }
         
         .form-control::placeholder {
@@ -131,14 +131,14 @@
         
         .password-toggle {
             position: absolute;
-            right: 16px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: #999;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             padding: 4px;
             transition: color 0.2s;
         }
@@ -150,17 +150,17 @@
         .user-type-selection {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
         
         .user-type-card {
             position: relative;
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-align: center;
         }
         
@@ -171,7 +171,7 @@
         
         .user-type-card:hover {
             border-color: #FF6B35;
-            background: #fff9f7;
+            background: #f9f9f9;
         }
         
         .user-type-card input[type="radio"]:checked + .user-type-content {
@@ -184,44 +184,44 @@
         
         .user-type-card.selected {
             border-color: #FF6B35;
-            background: #fff9f7;
+            background: #f9f9f9;
         }
         
         .user-type-icon {
-            font-size: 32px;
-            margin-bottom: 8px;
+            font-size: 24px;
+            margin-bottom: 6px;
             display: block;
         }
         
         .user-type-title {
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: 500;
+            font-size: 14px;
             margin-bottom: 4px;
         }
         
         .user-type-desc {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
         
         .check-icon {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 6px;
+            right: 6px;
             color: #FF6B35;
-            font-size: 20px;
+            font-size: 16px;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s ease;
         }
         
         .password-strength {
-            margin-top: 8px;
-            font-size: 12px;
+            margin-top: 6px;
+            font-size: 11px;
         }
         
         .strength-bar {
-            height: 4px;
-            border-radius: 2px;
+            height: 3px;
+            border-radius: 1px;
             background: #e0e0e0;
             margin-top: 4px;
             overflow: hidden;
@@ -230,8 +230,8 @@
         .strength-bar-fill {
             height: 100%;
             width: 0;
-            transition: all 0.3s ease;
-            border-radius: 2px;
+            transition: all 0.2s ease;
+            border-radius: 1px;
         }
         
         .strength-weak { 
@@ -251,31 +251,25 @@
         
         .btn-primary {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            padding: 12px;
+            background: #FF6B35;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            transition: all 0.2s ease;
             margin-top: 8px;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
+            background: #F7931E;
         }
         
         .divider {
             text-align: center;
-            margin: 24px 0;
+            margin: 20px 0;
             position: relative;
         }
         
@@ -291,50 +285,48 @@
         
         .divider span {
             background: white;
-            padding: 0 16px;
+            padding: 0 12px;
             color: #999;
-            font-size: 14px;
+            font-size: 13px;
             position: relative;
             z-index: 1;
         }
         
         .btn-google {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            transition: all 0.3s ease;
+            gap: 10px;
+            transition: all 0.2s ease;
             color: #333;
         }
         
         .btn-google:hover {
             border-color: #FF6B35;
-            background: #fff9f7;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background: #f9f9f9;
         }
         
         .signin-link {
             text-align: center;
-            margin-top: 24px;
-            padding-top: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
             border-top: 1px solid #e0e0e0;
             color: #666;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .signin-link a {
             color: #FF6B35;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
             margin-left: 4px;
         }
         
@@ -343,13 +335,13 @@
         }
         
         .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 14px;
+            gap: 8px;
+            font-size: 13px;
             animation: slideDown 0.3s ease-out;
         }
         
@@ -377,22 +369,22 @@
         }
         
         .alert i {
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 12px;
         }
         
         @media (max-width: 480px) {
             .auth-container {
-                padding: 32px 24px;
+                padding: 24px 20px;
             }
             
             .logo-section h1 {
-                font-size: 24px;
+                font-size: 20px;
             }
             
             .form-row {
@@ -573,7 +565,7 @@
         </div>
         
         <button type="button" class="btn-google" onclick="handleGoogleSignIn()">
-            <svg width="20" height="20" viewBox="0 0 48 48">
+            <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
                 <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
