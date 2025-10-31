@@ -1143,3 +1143,278 @@ def channel_edit(request, username):
     }
     
     return render(request, 'channel_edit.html', context)
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from .models import Video, User, Tag, Category
+
+# ===== SEARCH AUTOCOMPLETE (REQUIRED) =====
+@require_http_methods(["GET"])
+def search_autocomplete(request):
+    """
+    AJAX endpoint for search autocomplete
+    Returns suggestions based on query
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'suggestions': []})
+    
+    suggestions = []
+    
+    try:
+        # Search in videos (titles)
+        video_results = Video.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query),
+            status='published'
+        ).values('title').annotate(
+            view_count=Count('views')
+        ).order_by('-view_count')[:3]
+        
+        for video in video_results:
+            suggestions.append({
+                'type': 'video',
+                'text': video['title'],
+                'icon': 'bi-play-circle'
+            })
+        
+        # Search in tags
+        tag_results = Tag.objects.filter(
+            name__icontains=query
+        ).order_by('-usage_count')[:2]
+        
+        for tag in tag_results:
+            suggestions.append({
+                'type': 'tag',
+                'text': tag.name,
+                'icon': 'bi-hash'
+            })
+        
+        # Search in creators
+        creator_results = User.objects.filter(
+            Q(username__icontains=query) | Q(channel_name__icontains=query),
+            is_creator=True
+        ).order_by('-total_followers')[:2]
+        
+        for creator in creator_results:
+            suggestions.append({
+                'type': 'creator',
+                'text': creator.channel_name or creator.username,
+                'icon': 'bi-person-circle',
+                'url': f'/creator/{creator.username}/'
+            })
+        
+        # Search in categories
+        category_results = Category.objects.filter(
+            name__icontains=query,
+            is_active=True
+        )[:1]
+        
+        for category in category_results:
+            suggestions.append({
+                'type': 'category',
+                'text': category.name,
+                'icon': 'bi-grid'
+            })
+        
+    except Exception as e:
+        print(f"Autocomplete error: {e}")
+    
+    # Limit to 6 suggestions
+    suggestions = suggestions[:6]
+    
+    return JsonResponse({
+        'suggestions': suggestions,
+        'query': query
+    })
+
+# ===== SEARCH RESULTS (REQUIRED) =====
+@require_http_methods(["GET"])
+def search_results(request):
+    """
+    Main search results page
+    """
+    query = request.GET.get('q', '').strip()
+    filter_type = request.GET.get('type', 'all')  # all, video, creator, playlist
+    
+    context = {
+        'query': query,
+        'filter_type': filter_type,
+        'videos': None,
+        'creators': None,
+        'playlists': None,
+    }
+    
+    if not query:
+        return render(request, 'search_results.html', context)
+    
+    try:
+        # Search videos
+        if filter_type in ['all', 'video']:
+            videos = Video.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(tags__name__icontains=query),
+                status='published'
+            ).select_related('creator', 'category').distinct().order_by('-view_count')
+            
+            # Paginate videos
+            paginator = Paginator(videos, 20)
+            page_number = request.GET.get('page', 1)
+            context['videos'] = paginator.get_page(page_number)
+        
+        # Search creators
+        if filter_type in ['all', 'creator']:
+            creators = User.objects.filter(
+                Q(username__icontains=query) |
+                Q(channel_name__icontains=query) |
+                Q(bio__icontains=query),
+                is_creator=True
+            ).order_by('-total_followers')[:10]
+            context['creators'] = creators
+        
+        # Search playlists
+        if filter_type in ['all', 'playlist']:
+            from .models import Playlist
+            playlists = Playlist.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query),
+                privacy='public'
+            ).select_related('user').order_by('-view_count')[:10]
+            context['playlists'] = playlists
+    
+    except Exception as e:
+        print(f"Search error: {e}")
+    
+    return render(request, 'search_results.html', context)
+
+
+# ===== PLACEHOLDER VIEWS (Replace with your actual views) =====
+
+def shorts(request):
+    return render(request, 'coming_soon.html', {'page': 'Shorts'})
+
+def trending(request):
+    videos = Video.objects.filter(status='published').order_by('-view_count')[:20]
+    return render(request, 'trending.html', {'videos': videos})
+
+def category_videos(request, slug):
+    category = Category.objects.get(slug=slug)
+    videos = Video.objects.filter(category=category, status='published')
+    return render(request, 'category.html', {'category': category, 'videos': videos})
+
+def music_videos(request):
+    return category_videos(request, 'music')
+
+def gaming_videos(request):
+    return category_videos(request, 'gaming')
+
+def news_videos(request):
+    return category_videos(request, 'news')
+
+def sports_videos(request):
+    return category_videos(request, 'sports')
+
+def live_streams(request):
+    from .models import LiveStream
+    streams = LiveStream.objects.filter(status='live')
+    return render(request, 'live.html', {'streams': streams})
+
+@login_required
+def subscriptions(request):
+    return render(request, 'subscriptions.html')
+
+@login_required
+def all_subscriptions(request):
+    return render(request, 'all_subscriptions.html')
+
+@login_required
+def watch_history(request):
+    return render(request, 'history.html')
+
+@login_required
+def user_playlists(request):
+    return render(request, 'playlists.html')
+
+@login_required
+def watch_later(request):
+    return render(request, 'watch_later.html')
+
+@login_required
+def liked_videos(request):
+    return render(request, 'liked.html')
+
+def creator_profile(request, username):
+    creator = User.objects.get(username=username)
+    return render(request, 'creator_profile.html', {'creator': creator})
+
+@login_required
+def studio_dashboard(request):
+    return render(request, 'studio/dashboard.html')
+
+@login_required
+def upload_video(request):
+    return render(request, 'studio/upload.html')
+
+@login_required
+def studio_videos(request):
+    return render(request, 'studio/videos.html')
+
+def user_profile(request, username):
+    user = User.objects.get(username=username)
+    return render(request, 'profile.html', {'profile_user': user})
+
+@login_required
+def user_settings(request):
+    return render(request, 'settings.html')
+
+@login_required
+def notifications(request):
+    return render(request, 'notifications.html')
+
+def login_view(request):
+    # Use Django's built-in auth views or create custom
+    from django.contrib.auth.views import LoginView
+    return LoginView.as_view(template_name='auth/login.html')(request)
+
+def register_view(request):
+    return render(request, 'auth/register.html')
+
+def logout_view(request):
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect('home')
+
+def help_center(request):
+    return render(request, 'help.html')
+
+def feedback(request):
+    return render(request, 'feedback.html')
+
+def watch_video(request, video_id):
+    video = Video.objects.get(video_id=video_id)
+    return render(request, 'watch.html', {'video': video})
+
+# ===== API VIEWS (AJAX) =====
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def api_subscribe(request, creator_id):
+    """Subscribe/Unsubscribe to creator"""
+    try:
+        creator = User.objects.get(id=creator_id)
+        from .models import Follow
+        
+        if request.method == "POST":
+            Follow.objects.get_or_create(follower=request.user, following=creator)
+            return JsonResponse({'success': True, 'subscribed': True})
+        else:  # DELETE
+            Follow.objects.filter(follower=request.user, following=creator).delete()
+            return JsonResponse({'success': True, 'subscribed': False})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

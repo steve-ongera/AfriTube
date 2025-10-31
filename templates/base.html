@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AfriTube - Watch, Share & Earn{% endblock %}</title>
+    <title>{% block title %}{{ site_name }} - {{ site_tagline }}{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,16 +11,25 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --sidebar-width: 240px;
             --sidebar-collapsed-width: 72px;
-            --navbar-height: 56px;
-            --primary-color: #ff4400;
-            --hover-bg: #f2f2f2;
-            --text-primary: #0f0f0f;
+            --navbar-height: 60px;
+            --primary-color: #FF6B35;
+            --primary-hover: #E85A2A;
+            --accent-color: #F7931E;
+            --hover-bg: #f5f5f5;
+            --text-primary: #1a1a1a;
             --text-secondary: #606060;
-            --border-color: #e5e5e5;
+            --border-color: #e0e0e0;
+            --bg-light: #fafafa;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -30,12 +39,13 @@
         }
 
         body {
-            font-family: "Roboto", Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
-            background-color: #f9f9f9;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
         }
 
-        /* Navbar */
+        /* ===== NAVBAR ===== */
         .navbar-custom {
             height: var(--navbar-height);
             background: #fff;
@@ -45,79 +55,174 @@
             left: 0;
             right: 0;
             z-index: 1030;
-            padding: 0 16px;
+            padding: 0 20px;
+            box-shadow: var(--shadow-sm);
         }
 
         .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
             color: var(--text-primary);
             font-weight: 700;
-            font-size: 20px;
+            font-size: 22px;
+            transition: var(--transition);
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.02);
         }
 
         .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--primary-color);
-            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-size: 20px;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
         }
 
+        .brand-text {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== SEARCH ===== */
         .navbar-search {
-            max-width: 600px;
+            max-width: 640px;
             flex: 1;
+            position: relative;
         }
 
         .search-form {
             display: flex;
-            height: 40px;
+            height: 42px;
+            position: relative;
         }
 
         .search-input {
             flex: 1;
-            border: 1px solid #ccc;
+            border: 1.5px solid #d0d0d0;
             border-right: none;
-            border-radius: 20px 0 0 20px;
-            padding: 0 16px;
-            font-size: 16px;
+            border-radius: 24px 0 0 24px;
+            padding: 0 20px;
+            font-size: 15px;
+            transition: var(--transition);
+            background: #fafafa;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #1c62b9;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
         }
 
         .search-btn {
-            width: 64px;
+            width: 68px;
             background: #f8f8f8;
-            border: 1px solid #ccc;
+            border: 1.5px solid #d0d0d0;
             border-left: none;
-            border-radius: 0 20px 20px 0;
+            border-radius: 0 24px 24px 0;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: var(--transition);
         }
 
         .search-btn:hover {
-            background: #f0f0f0;
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
+        /* Autocomplete Dropdown */
+        .search-autocomplete {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 68px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: var(--shadow-md);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-autocomplete.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .autocomplete-icon {
+            width: 20px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .autocomplete-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .autocomplete-type {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        /* ===== NAVBAR ACTIONS ===== */
         .navbar-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
 
         .nav-icon-btn {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border: none;
             background: transparent;
             border-radius: 50%;
@@ -126,6 +231,8 @@
             justify-content: center;
             cursor: pointer;
             position: relative;
+            transition: var(--transition);
+            color: var(--text-primary);
         }
 
         .nav-icon-btn:hover {
@@ -134,24 +241,52 @@
 
         .notification-badge {
             position: absolute;
-            top: 6px;
-            right: 6px;
-            background: #cc0000;
+            top: 8px;
+            right: 8px;
+            background: #E63946;
             color: white;
             font-size: 10px;
-            padding: 2px 5px;
+            padding: 2px 6px;
             border-radius: 10px;
             font-weight: 600;
+            min-width: 18px;
+            text-align: center;
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition);
         }
 
-        /* Sidebar */
+        .user-avatar:hover {
+            border-color: var(--primary-color);
+        }
+
+        .create-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+        }
+
+        /* ===== SIDEBAR ===== */
         .sidebar {
             width: var(--sidebar-width);
             height: calc(100vh - var(--navbar-height));
@@ -160,7 +295,7 @@
             left: 0;
             background: #fff;
             overflow-y: auto;
-            transition: width 0.3s, transform 0.3s;
+            transition: var(--transition);
             z-index: 1020;
             border-right: 1px solid var(--border-color);
         }
@@ -172,11 +307,14 @@
         .sidebar-item {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
+            padding: 11px 16px;
             color: var(--text-primary);
             text-decoration: none;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: var(--transition);
+            position: relative;
+            margin: 2px 8px;
+            border-radius: 10px;
         }
 
         .sidebar-item:hover {
@@ -184,14 +322,27 @@
         }
 
         .sidebar-item.active {
-            background: #f2f2f2;
-            font-weight: 500;
+            background: linear-gradient(90deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.1) 100%);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 3px;
+            background: var(--primary-color);
+            border-radius: 0 3px 3px 0;
         }
 
         .sidebar-item i {
             font-size: 22px;
             width: 24px;
             margin-right: 24px;
+            flex-shrink: 0;
         }
 
         .sidebar.collapsed .sidebar-item span {
@@ -204,10 +355,12 @@
         }
 
         .sidebar-section-title {
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .sidebar.collapsed .sidebar-section-title {
@@ -220,6 +373,9 @@
             padding: 8px 16px;
             color: var(--text-primary);
             text-decoration: none;
+            margin: 2px 8px;
+            border-radius: 10px;
+            transition: var(--transition);
         }
 
         .subscription-item:hover {
@@ -227,60 +383,79 @@
         }
 
         .subscription-avatar {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            margin-right: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
         }
 
-        /* Main Content */
+        .subscription-name {
+            flex: 1;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .verified-badge {
+            color: var(--primary-color);
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--navbar-height);
             padding: 24px;
             min-height: calc(100vh - var(--navbar-height));
-            transition: margin-left 0.3s;
+            transition: var(--transition);
         }
 
         .main-content.expanded {
             margin-left: var(--sidebar-collapsed-width);
         }
 
-        /* Category Pills */
+        /* ===== CATEGORY PILLS ===== */
         .category-pills {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
             overflow-x: auto;
             padding-bottom: 12px;
+            scrollbar-width: none;
         }
 
         .category-pills::-webkit-scrollbar {
-            height: 0;
+            display: none;
         }
 
         .category-pill {
-            padding: 8px 12px;
-            background: #f2f2f2;
+            padding: 10px 16px;
+            background: #f0f0f0;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             white-space: nowrap;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
+            transition: var(--transition);
+            color: var(--text-primary);
         }
 
         .category-pill:hover {
-            background: #e5e5e5;
+            background: #e0e0e0;
         }
 
         .category-pill.active {
-            background: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
         }
 
-        /* Mobile Styles */
-        @media (max-width: 768px) {
+        /* ===== MOBILE STYLES ===== */
+        @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -294,11 +469,53 @@
             }
 
             .navbar-search {
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --navbar-height: 56px;
+            }
+
+            .navbar-custom {
+                padding: 0 12px;
+            }
+
+            .navbar-search {
                 display: none;
             }
 
             .mobile-search-btn {
-                display: block !important;
+                display: flex !important;
+            }
+
+            .create-btn span {
+                display: none;
+            }
+
+            .brand-text {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+
+            .main-content {
+                padding: 16px 12px;
+            }
+
+            .category-pills {
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .category-pill {
+                padding: 8px 14px;
+                font-size: 13px;
             }
         }
 
@@ -312,7 +529,7 @@
             }
         }
 
-        /* Scrollbar */
+        /* ===== SCROLLBAR ===== */
         .sidebar::-webkit-scrollbar {
             width: 8px;
         }
@@ -322,29 +539,44 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: #909090;
+            background: #d0d0d0;
             border-radius: 4px;
         }
 
         .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #606060;
+            background: #b0b0b0;
         }
 
-        /* Create Button */
-        .create-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 500;
+        /* ===== LOADING ANIMATION ===== */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
-        .create-btn:hover {
-            background: #f8f8f8;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== MOBILE OVERLAY ===== */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1019;
+        }
+
+        .mobile-overlay.show {
+            display: block;
         }
     </style>
 
@@ -355,144 +587,197 @@
     <nav class="navbar-custom d-flex align-items-center justify-content-between">
         <!-- Left Section -->
         <div class="d-flex align-items-center gap-2">
-            <button class="nav-icon-btn menu-toggle-desktop" id="menuToggle">
+            <button class="nav-icon-btn menu-toggle-desktop" id="menuToggle" aria-label="Toggle menu">
                 <i class="bi bi-list fs-4"></i>
             </button>
-            <button class="nav-icon-btn menu-toggle-mobile d-md-none" id="menuToggleMobile">
+            <button class="nav-icon-btn menu-toggle-mobile d-lg-none" id="menuToggleMobile" aria-label="Toggle menu">
                 <i class="bi bi-list fs-4"></i>
             </button>
             <a href="/" class="navbar-brand">
                 <div class="logo-icon">
                     <i class="bi bi-play-circle-fill"></i>
                 </div>
-                <span>AfriTube</span>
+                <span class="brand-text">{{ site_name }}</span>
             </a>
         </div>
 
         <!-- Search Section (Desktop) -->
         <div class="navbar-search d-none d-md-flex">
-            <form class="search-form w-100">
-                <input type="text" class="search-input" placeholder="Search" name="q">
-                <button type="submit" class="search-btn">
+            <form class="search-form w-100" action="{% url 'search_results' %}" method="get">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="Search videos, creators..." 
+                    name="q"
+                    id="searchInput"
+                    autocomplete="off"
+                    value="{{ query|default:'' }}"
+                >
+                <button type="submit" class="search-btn" aria-label="Search">
                     <i class="bi bi-search"></i>
                 </button>
+                
+                <!-- Autocomplete Dropdown -->
+                <div class="search-autocomplete" id="autocompleteDropdown">
+                    <!-- Populated dynamically -->
+                </div>
             </form>
         </div>
 
         <!-- Right Section -->
         <div class="navbar-actions">
-            <button class="nav-icon-btn mobile-search-btn">
+            <button class="nav-icon-btn mobile-search-btn" aria-label="Search">
                 <i class="bi bi-search"></i>
             </button>
             
-            <button class="create-btn d-none d-md-flex">
-                <i class="bi bi-plus-lg"></i>
-                <span>Create</span>
-            </button>
+            {% if user.is_authenticated %}
+                {% if is_creator %}
+                    <a href="/studio/upload/" class="create-btn text-decoration-none">
+                        <i class="bi bi-plus-lg"></i>
+                        <span>Create</span>
+                    </a>
+                {% else %}
+                    <button class="nav-icon-btn d-lg-none">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                {% endif %}
 
-            <button class="nav-icon-btn d-md-none">
-                <i class="bi bi-plus-lg"></i>
-            </button>
+                <a href="/notifications/" class="nav-icon-btn text-decoration-none">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications_count > 0 %}
+                        <span class="notification-badge">
+                            {{ unread_notifications_count|default:"0" }}
+                        </span>
+                    {% endif %}
+                </a>
 
-            <button class="nav-icon-btn">
-                <i class="bi bi-bell"></i>
-                <span class="notification-badge">9+</span>
-            </button>
-
-            <button class="nav-icon-btn">
-                <img src="https://ui-avatars.com/api/?name=User&background=ff4400&color=fff" alt="User" class="user-avatar">
-            </button>
+                <div class="dropdown">
+                    <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-label="User menu">
+                        <img src="{{ user.get_profile_picture_url }}" alt="{{ user.username }}" class="user-avatar">
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile/{{ user.username }}/">
+                            <i class="bi bi-person me-2"></i> Your Channel
+                        </a></li>
+                        <li><a class="dropdown-item" href="/studio/">
+                            <i class="bi bi-collection-play me-2"></i> Studio
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/settings/">
+                            <i class="bi bi-gear me-2"></i> Settings
+                        </a></li>
+                        <li><a class="dropdown-item" href="/logout/">
+                            <i class="bi bi-box-arrow-right me-2"></i> Sign out
+                        </a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login/" class="create-btn text-decoration-none">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Sign in</span>
+                </a>
+            {% endif %}
         </div>
     </nav>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <!-- Main Navigation -->
         <div class="sidebar-section">
-            <a href="/" class="sidebar-item active">
+            <a href="/" class="sidebar-item {% if request.path == '/' %}active{% endif %}">
                 <i class="bi bi-house-door-fill"></i>
                 <span>Home</span>
             </a>
-            <a href="/shorts" class="sidebar-item">
+            <a href="/shorts/" class="sidebar-item">
                 <i class="bi bi-play-btn"></i>
                 <span>Shorts</span>
             </a>
-            <a href="/subscriptions" class="sidebar-item">
-                <i class="bi bi-collection-play"></i>
-                <span>Subscriptions</span>
-            </a>
+            {% if user.is_authenticated %}
+                <a href="/subscriptions/" class="sidebar-item">
+                    <i class="bi bi-collection-play"></i>
+                    <span>Subscriptions</span>
+                </a>
+            {% endif %}
         </div>
 
+        {% if user.is_authenticated %}
         <!-- You Section -->
         <div class="sidebar-section">
             <div class="sidebar-section-title">You</div>
-            <a href="/history" class="sidebar-item">
+            <a href="/history/" class="sidebar-item">
                 <i class="bi bi-clock-history"></i>
                 <span>History</span>
             </a>
-            <a href="/playlists" class="sidebar-item">
+            <a href="/playlists/" class="sidebar-item">
                 <i class="bi bi-collection"></i>
                 <span>Playlists</span>
             </a>
-            <a href="/your-videos" class="sidebar-item">
-                <i class="bi bi-play-circle"></i>
-                <span>Your videos</span>
-            </a>
-            <a href="/watch-later" class="sidebar-item">
+            {% if is_creator %}
+                <a href="/studio/videos/" class="sidebar-item">
+                    <i class="bi bi-play-circle"></i>
+                    <span>Your videos</span>
+                </a>
+            {% endif %}
+            <a href="/watch-later/" class="sidebar-item">
                 <i class="bi bi-clock"></i>
                 <span>Watch later</span>
             </a>
-            <a href="/liked-videos" class="sidebar-item">
+            <a href="/liked/" class="sidebar-item">
                 <i class="bi bi-hand-thumbs-up"></i>
                 <span>Liked videos</span>
             </a>
         </div>
 
         <!-- Subscriptions -->
+        {% if user_subscriptions %}
         <div class="sidebar-section">
             <div class="sidebar-section-title">Subscriptions</div>
-            <a href="#" class="subscription-item">
-                <img src="https://ui-avatars.com/api/?name=Creator+1&background=ff4400&color=fff" class="subscription-avatar">
-                <span>Creator Name 1</span>
-            </a>
-            <a href="#" class="subscription-item">
-                <img src="https://ui-avatars.com/api/?name=Creator+2&background=3498db&color=fff" class="subscription-avatar">
-                <span>Creator Name 2</span>
-            </a>
-            <a href="#" class="subscription-item">
-                <img src="https://ui-avatars.com/api/?name=Creator+3&background=2ecc71&color=fff" class="subscription-avatar">
-                <span>Creator Name 3</span>
-            </a>
-            <a href="#" class="subscription-item">
+            {% for subscription in user_subscriptions %}
+                <a href="/creator/{{ subscription.username }}/" class="subscription-item">
+                    <img src="{{ subscription.profile_picture }}" alt="{{ subscription.channel_name }}" class="subscription-avatar">
+                    <span class="subscription-name">
+                        {{ subscription.channel_name }}
+                        {% if subscription.is_verified %}
+                            <i class="bi bi-patch-check-fill verified-badge"></i>
+                        {% endif %}
+                    </span>
+                </a>
+            {% endfor %}
+            <a href="/subscriptions/all/" class="subscription-item">
                 <i class="bi bi-chevron-down"></i>
-                <span>Show more</span>
+                <span>Show all</span>
             </a>
         </div>
+        {% endif %}
+        {% endif %}
 
         <!-- Explore -->
         <div class="sidebar-section">
             <div class="sidebar-section-title">Explore</div>
-            <a href="/trending" class="sidebar-item">
+            <a href="/trending/" class="sidebar-item">
                 <i class="bi bi-fire"></i>
                 <span>Trending</span>
             </a>
-            <a href="/music" class="sidebar-item">
+            <a href="/music/" class="sidebar-item">
                 <i class="bi bi-music-note-beamed"></i>
                 <span>Music</span>
             </a>
-            <a href="/gaming" class="sidebar-item">
+            <a href="/gaming/" class="sidebar-item">
                 <i class="bi bi-controller"></i>
                 <span>Gaming</span>
             </a>
-            <a href="/news" class="sidebar-item">
+            <a href="/news/" class="sidebar-item">
                 <i class="bi bi-newspaper"></i>
                 <span>News</span>
             </a>
-            <a href="/sports" class="sidebar-item">
+            <a href="/sports/" class="sidebar-item">
                 <i class="bi bi-trophy"></i>
                 <span>Sports</span>
             </a>
-            <a href="/live" class="sidebar-item">
+            <a href="/live/" class="sidebar-item">
                 <i class="bi bi-broadcast"></i>
                 <span>Live</span>
             </a>
@@ -500,15 +785,15 @@
 
         <!-- Settings -->
         <div class="sidebar-section">
-            <a href="/settings" class="sidebar-item">
+            <a href="/settings/" class="sidebar-item">
                 <i class="bi bi-gear"></i>
                 <span>Settings</span>
             </a>
-            <a href="/help" class="sidebar-item">
+            <a href="/help/" class="sidebar-item">
                 <i class="bi bi-question-circle"></i>
                 <span>Help</span>
             </a>
-            <a href="/feedback" class="sidebar-item">
+            <a href="/feedback/" class="sidebar-item">
                 <i class="bi bi-chat-left-text"></i>
                 <span>Send feedback</span>
             </a>
@@ -519,17 +804,12 @@
     <main class="main-content" id="mainContent">
         <!-- Category Pills -->
         <div class="category-pills">
-            <button class="category-pill active">All</button>
-            <button class="category-pill">Music</button>
-            <button class="category-pill">Comedy</button>
-            <button class="category-pill">Gaming</button>
-            <button class="category-pill">Live</button>
-            <button class="category-pill">News</button>
-            <button class="category-pill">Sports</button>
-            <button class="category-pill">Education</button>
-            <button class="category-pill">Entertainment</button>
-            <button class="category-pill">Cooking</button>
-            <button class="category-pill">Travel</button>
+            <button class="category-pill active" data-category="all">All</button>
+            {% for category in global_categories|slice:":10" %}
+                <button class="category-pill" data-category="{{ category.slug }}">
+                    {{ category.name }}
+                </button>
+            {% endfor %}
         </div>
 
         <!-- Page Content -->
@@ -542,40 +822,234 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Sidebar Toggle
+        // ===== SIDEBAR TOGGLE =====
         const menuToggle = document.getElementById('menuToggle');
         const menuToggleMobile = document.getElementById('menuToggleMobile');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
+        const mobileOverlay = document.getElementById('mobileOverlay');
 
         // Desktop toggle (collapse/expand)
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        });
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
 
         // Mobile toggle (show/hide)
-        menuToggleMobile.addEventListener('click', () => {
-            sidebar.classList.toggle('show');
+        if (menuToggleMobile) {
+            menuToggleMobile.addEventListener('click', () => {
+                sidebar.classList.toggle('show');
+                mobileOverlay.classList.toggle('show');
+            });
+        }
+
+        // Close sidebar when clicking overlay
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('show');
+                mobileOverlay.classList.remove('show');
+            });
+        }
+
+        // Restore sidebar state
+        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth >= 1024) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+        }
+
+        // ===== SEARCH AUTOCOMPLETE =====
+        const searchInput = document.getElementById('searchInput');
+        const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+        let searchTimeout;
+
+        if (searchInput && autocompleteDropdown) {
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                
+                // Clear previous timeout
+                clearTimeout(searchTimeout);
+                
+                // Hide dropdown if query is too short
+                if (query.length < 2) {
+                    autocompleteDropdown.classList.remove('show');
+                    return;
+                }
+                
+                // Debounce API call
+                searchTimeout = setTimeout(() => {
+                    fetchAutocompleteSuggestions(query);
+                }, 300);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+                    autocompleteDropdown.classList.remove('show');
+                }
+            });
+
+            // Show dropdown when input is focused with content
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2) {
+                    autocompleteDropdown.classList.add('show');
+                }
+            });
+        }
+
+        function fetchAutocompleteSuggestions(query) {
+            fetch(`/api/search/autocomplete/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayAutocompleteSuggestions(data.suggestions);
+                })
+                .catch(error => {
+                    console.error('Autocomplete error:', error);
+                });
+        }
+
+        function displayAutocompleteSuggestions(suggestions) {
+            if (suggestions.length === 0) {
+                autocompleteDropdown.classList.remove('show');
+                return;
+            }
+
+            const html = suggestions.map(item => {
+                const url = item.url || `/search/?q=${encodeURIComponent(item.text)}`;
+                return `
+                    <a href="${url}" class="autocomplete-item text-decoration-none">
+                        <i class="bi ${item.icon} autocomplete-icon"></i>
+                        <span class="autocomplete-text">${escapeHtml(item.text)}</span>
+                        <span class="autocomplete-type">${item.type}</span>
+                    </a>
+                `;
+            }).join('');
+
+            autocompleteDropdown.innerHTML = html;
+            autocompleteDropdown.classList.add('show');
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ===== CATEGORY PILLS =====
+        const categoryPills = document.querySelectorAll('.category-pill');
+        
+        categoryPills.forEach(pill => {
+            pill.addEventListener('click', function() {
+                // Remove active class from all pills
+                categoryPills.forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked pill
+                this.classList.add('active');
+                
+                // Get category slug
+                const category = this.dataset.category;
+                
+                // Redirect to category page or filter content
+                if (category !== 'all') {
+                    window.location.href = `/category/${category}/`;
+                } else {
+                    window.location.href = '/';
+                }
+            });
         });
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && !menuToggleMobile.contains(e.target)) {
-                    sidebar.classList.remove('show');
+        // ===== ACTIVE SIDEBAR ITEM =====
+        const currentPath = window.location.pathname;
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        
+        sidebarItems.forEach(item => {
+            const href = item.getAttribute('href');
+            if (href && currentPath.startsWith(href) && href !== '/') {
+                sidebarItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            }
+        });
+
+        // ===== SMOOTH SCROLL =====
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ===== KEYBOARD SHORTCUTS =====
+        document.addEventListener('keydown', function(e) {
+            // Focus search with '/' key
+            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                searchInput?.focus();
+            }
+            
+            // Toggle sidebar with 'm' key
+            if (e.key === 'm' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
                 }
             }
         });
 
-        // Active sidebar item
-        const sidebarItems = document.querySelectorAll('.sidebar-item');
-        sidebarItems.forEach(item => {
-            item.addEventListener('click', function() {
-                sidebarItems.forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-            });
+        // ===== HANDLE WINDOW RESIZE =====
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (window.innerWidth >= 1024) {
+                    // Desktop: restore saved state
+                    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('expanded');
+                    }
+                    // Remove mobile classes
+                    sidebar.classList.remove('show');
+                    mobileOverlay.classList.remove('show');
+                } else {
+                    // Mobile: remove desktop classes
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                }
+            }, 250);
         });
+
+        // ===== LAZY LOAD IMAGES =====
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            observer.unobserve(img);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
     </script>
 
     {% block extra_js %}{% endblock %}

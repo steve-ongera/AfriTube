@@ -13,6 +13,10 @@ urlpatterns = [
     path('category/<slug:slug>/', views.category_view, name='category'),
     path('search/', views.search, name='search'),
 
+    # Add these two lines:
+    path('api/search/autocomplete/', views.search_autocomplete, name='search_autocomplete'),
+    path('search-result/', views.search_results, name='search_results'),
+
     # Live Stream URLs
     path('stream/<uuid:stream_id>/', views.stream_detail, name='stream_detail'),
     path('stream/<uuid:stream_id>/join/', views.join_stream, name='join_stream'),

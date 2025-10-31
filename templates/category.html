@@ -1,0 +1,639 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Category Header */
+    .category-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        padding: 48px 24px;
+        border-radius: 16px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .category-header-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+    }
+
+    .category-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        display: inline-block;
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .category-title {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .category-description {
+        font-size: 16px;
+        opacity: 0.95;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .category-stats {
+        display: flex;
+        gap: 24px;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .category-stat i {
+        margin-right: 6px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .sort-dropdown {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sort-select {
+        padding: 10px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .sort-select:hover {
+        border-color: var(--primary-color);
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 8px;
+        background: white;
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .view-btn {
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+        color: var(--text-secondary);
+    }
+
+    .view-btn:hover {
+        color: var(--primary-color);
+    }
+
+    .view-btn.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Video Grid */
+    .videos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .video-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: var(--transition);
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .video-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .video-thumbnail-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        overflow: hidden;
+        background: #f0f0f0;
+    }
+
+    .video-thumbnail {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .video-card:hover .video-thumbnail {
+        transform: scale(1.08);
+    }
+
+    .video-duration {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .premium-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .video-card-body {
+        padding: 16px;
+    }
+
+    .video-card-creator {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .creator-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .video-card-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .video-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+    }
+
+    .video-card-channel {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+    }
+
+    .verified-icon {
+        color: var(--primary-color);
+        font-size: 14px;
+    }
+
+    .video-card-meta {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .video-card-meta span::after {
+        content: "•";
+        margin-left: 8px;
+    }
+
+    .video-card-meta span:last-child::after {
+        content: "";
+        margin-left: 0;
+    }
+
+    /* List View */
+    .videos-list .video-card {
+        display: flex;
+        flex-direction: row;
+        height: auto;
+    }
+
+    .videos-list .video-thumbnail-wrapper {
+        width: 360px;
+        padding-top: 0;
+        height: 202px;
+        flex-shrink: 0;
+    }
+
+    .videos-list .video-card-body {
+        flex: 1;
+        padding: 16px 20px;
+    }
+
+    .videos-list .video-card-title {
+        font-size: 18px;
+        -webkit-line-clamp: 2;
+    }
+
+    .video-description {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-top: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state i {
+        font-size: 72px;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 24px;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        font-size: 16px;
+    }
+
+    /* Loading Skeleton */
+    .skeleton {
+        animation: skeleton-loading 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading {
+        0% { background-color: #f0f0f0; }
+        100% { background-color: #e0e0e0; }
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 48px;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 8px;
+        list-style: none;
+    }
+
+    .page-item .page-link {
+        padding: 10px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .page-item .page-link:hover {
+        background: var(--hover-bg);
+        border-color: var(--primary-color);
+    }
+
+    .page-item.active .page-link {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .page-item.disabled .page-link {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .category-header {
+            padding: 32px 20px;
+        }
+
+        .category-title {
+            font-size: 28px;
+        }
+
+        .category-icon {
+            font-size: 36px;
+        }
+
+        .videos-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .videos-list .video-card {
+            flex-direction: column;
+        }
+
+        .videos-list .video-thumbnail-wrapper {
+            width: 100%;
+            height: 200px;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .sort-dropdown,
+        .view-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Category Header -->
+<div class="category-header">
+    <div class="category-header-content">
+        {% if category.icon %}
+            <div class="category-icon">
+                <i class="bi bi-{{ category.icon }}"></i>
+            </div>
+        {% endif %}
+        <h1 class="category-title">{{ category.name }}</h1>
+        {% if category.description %}
+            <p class="category-description">{{ category.description }}</p>
+        {% endif %}
+        <div class="category-stats">
+            <span class="category-stat">
+                <i class="bi bi-play-circle"></i>
+                {{ videos.paginator.count|default:0 }} video{{ videos.paginator.count|pluralize }}
+            </span>
+            <span class="category-stat">
+                <i class="bi bi-eye"></i>
+                Updated daily
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <div class="sort-dropdown">
+        <label for="sortBy">Sort by:</label>
+        <select id="sortBy" class="sort-select">
+            <option value="latest">Latest</option>
+            <option value="popular">Most Popular</option>
+            <option value="views">Most Viewed</option>
+            <option value="oldest">Oldest</option>
+        </select>
+    </div>
+
+    <div class="view-toggle">
+        <button class="view-btn active" id="gridViewBtn" aria-label="Grid view">
+            <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button class="view-btn" id="listViewBtn" aria-label="List view">
+            <i class="bi bi-list-ul"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Videos Grid -->
+{% if videos %}
+    <div class="videos-grid" id="videosContainer">
+        {% for video in videos %}
+            <a href="/watch/{{ video.video_id }}/" class="video-card">
+                <div class="video-thumbnail-wrapper">
+                    <img 
+                        src="{{ video.thumbnail.url }}" 
+                        alt="{{ video.title }}" 
+                        class="video-thumbnail"
+                        loading="lazy"
+                    >
+                    <span class="video-duration">{{ video.duration|default:"0:00" }}</span>
+                    {% if video.video_type != 'free' %}
+                        <span class="premium-badge">Premium</span>
+                    {% endif %}
+                </div>
+                <div class="video-card-body">
+                    <div class="video-card-creator">
+                        <img 
+                            src="{{ video.creator.get_profile_picture_url }}" 
+                            alt="{{ video.creator.username }}" 
+                            class="creator-avatar"
+                        >
+                        <div class="video-card-info">
+                            <h3 class="video-card-title">{{ video.title }}</h3>
+                            <div class="video-card-channel">
+                                {{ video.creator.channel_name|default:video.creator.username }}
+                                {% if video.creator.is_verified %}
+                                    <i class="bi bi-patch-check-fill verified-icon"></i>
+                                {% endif %}
+                            </div>
+                            <div class="video-card-meta">
+                                <span>{{ video.view_count|default:0 }} views</span>
+                                <span>{{ video.published_at|timesince }} ago</span>
+                            </div>
+                            <p class="video-description d-none">{{ video.description|truncatewords:20 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if videos.has_other_pages %}
+        <div class="pagination-wrapper">
+            <ul class="pagination">
+                {% if videos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ videos.previous_page_number }}&sort={{ request.GET.sort }}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for num in videos.paginator.page_range %}
+                    {% if videos.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > videos.number|add:'-3' and num < videos.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&sort={{ request.GET.sort }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if videos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ videos.next_page_number }}&sort={{ request.GET.sort }}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    {% endif %}
+{% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="bi bi-play-circle"></i>
+        <h3>No videos yet</h3>
+        <p>There are no videos in this category at the moment. Check back later!</p>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // View Toggle (Grid/List)
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const videosContainer = document.getElementById('videosContainer');
+
+    gridViewBtn.addEventListener('click', () => {
+        videosContainer.classList.remove('videos-list');
+        videosContainer.classList.add('videos-grid');
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        
+        // Show descriptions in list view only
+        document.querySelectorAll('.video-description').forEach(desc => {
+            desc.classList.add('d-none');
+        });
+        
+        localStorage.setItem('videoView', 'grid');
+    });
+
+    listViewBtn.addEventListener('click', () => {
+        videosContainer.classList.remove('videos-grid');
+        videosContainer.classList.add('videos-list');
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+        
+        // Show descriptions in list view
+        document.querySelectorAll('.video-description').forEach(desc => {
+            desc.classList.remove('d-none');
+        });
+        
+        localStorage.setItem('videoView', 'list');
+    });
+
+    // Restore saved view preference
+    const savedView = localStorage.getItem('videoView');
+    if (savedView === 'list') {
+        listViewBtn.click();
+    }
+
+    // Sort dropdown
+    const sortSelect = document.getElementById('sortBy');
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSort = urlParams.get('sort') || 'latest';
+    sortSelect.value = currentSort;
+
+    sortSelect.addEventListener('change', function() {
+        const selectedSort = this.value;
+        const currentPage = urlParams.get('page') || 1;
+        window.location.href = `?sort=${selectedSort}&page=${currentPage}`;
+    });
+
+    // Lazy loading images
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+</script>
+{% endblock %}
