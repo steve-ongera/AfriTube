@@ -471,7 +471,7 @@
 {% if videos %}
     <div class="videos-grid" id="videosContainer">
         {% for video in videos %}
-            <a href="/watch/{{ video.video_id }}/" class="video-card">
+            <a href="/video/{{ video.video_id }}/" class="video-card">
                 <div class="video-thumbnail-wrapper">
                     <img 
                         src="{{ video.thumbnail.url }}" 
